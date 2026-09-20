@@ -1,0 +1,9 @@
+hyprland
+waybar
+kitty
+pipewire
+pipewire-alsa
+pipewire-pulse
+wireplumber
+xdg-desktop-portal-hyprland
+polkit-kde-agent
