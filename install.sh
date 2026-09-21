@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_NAME="Ricks Linux Installer"
-VERSION="0.3.0"
+VERSION="1.0.1"
 MOUNTPOINT="/mnt"
 REPO_URL="https://github.com/SSTechNoobs/rick-linux.git"
 SOURCE_DIR="/tmp/rick-linux-source"
@@ -147,19 +147,15 @@ list_and_select_disk(){
 }
 
 prompt_settings(){
-  local input pass1 pass2
+  local pass1 pass2
 
-  read -r -p "Hostname [rick-linux]: " input
-  HOSTNAME_VALUE="${input:-rick-linux}"
-  [[ "$HOSTNAME_VALUE" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}$ ]] || die "Invalid hostname: $HOSTNAME_VALUE"
+  HOSTNAME_VALUE="minisfourm"
+  USERNAME_VALUE="rick"
+  TIMEZONE_VALUE="America/Chicago"
 
-  read -r -p "Username [rick]: " input
-  USERNAME_VALUE="${input:-rick}"
-  [[ "$USERNAME_VALUE" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || die "Invalid Linux username: $USERNAME_VALUE"
-
-  read -r -p "Timezone [America/Chicago]: " input
-  TIMEZONE_VALUE="${input:-America/Chicago}"
-  [[ -e "/usr/share/zoneinfo/$TIMEZONE_VALUE" ]] || die "Unknown timezone: $TIMEZONE_VALUE"
+  printf "Hostname: %s\n" "$HOSTNAME_VALUE"
+  printf "Username: %s\n" "$USERNAME_VALUE"
+  printf "Timezone: %s\n" "$TIMEZONE_VALUE"
 
   while true; do
     read -r -s -p "Password for $USERNAME_VALUE: " pass1; printf '\n'
@@ -377,7 +373,7 @@ Installed:
   - Steam
   - Aether
   - PCManFM
-  - Mousepad
+  - Xed
   - Calculator
   - Bluetooth / Network / Audio controls
   - CUPS printer support
