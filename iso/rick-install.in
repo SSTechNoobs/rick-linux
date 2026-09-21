@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PIN="@PIN@"
+RAW_BASE="https://raw.githubusercontent.com"
+
+echo "Ricks Linux Installer"
+echo
+
+if [[ ! -d /run/archiso ]]; then
+    echo "This command is only allowed from the Ricks Linux live USB."
+    echo "Nothing was changed."
+    exit 1
+fi
+
+echo "Downloading the pinned Ricks Linux installer..."
+
+curl -fsSL \
+    "$RAW_BASE/SSTechNoobs/rick-linux/$PIN/install.sh" \
+    -o /tmp/rick-linux-install.sh
+
+export RICK_SOURCE_REF="$PIN"
+
+exec bash /tmp/rick-linux-install.sh

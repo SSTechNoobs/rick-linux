@@ -1,0 +1,8 @@
+curl
+git
+gptfdisk
+dosfstools
+e2fsprogs
+arch-install-scripts
+efibootmgr
+networkmanager
