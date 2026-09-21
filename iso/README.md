@@ -6,7 +6,7 @@ This directory contains the reproducible build recipe for the Ricks Linux live i
 
 Run: ./iso/build-iso.sh
 
-Output directory: ~/Downloads/ricks-linux-v1.0.0/
+Output directory: ~/Downloads/ricks-linux-v1.0.1/
 
 Live USB installer command: rick-install
 
@@ -17,3 +17,14 @@ Clean-install-tested ISO SHA256:
 1dbc3923e7ce0e0f6abd06f87935bc841ad3b4df3da508d8bfd909bea9a57b47
 
 Future ISO hashes may differ when Arch Linux packages or the ArchISO releng profile change.
+
+
+## v1.0.1 candidate
+
+v1.0.1 installer candidate commit:
+5910418df7a36315cd5a7c32588482da1becfd0c
+
+This candidate includes the weather panel, Aether wallpaper integration,
+bar recovery, standard user folders, and Xed as the text editor.
+
+The v1.0.1 ISO has not yet been clean-install tested.
