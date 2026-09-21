@@ -28,7 +28,7 @@ Clean-install-tested ISO:
 rick-linux-2026.09.21-x86_64.iso
 
 Clean-install-tested ISO SHA256:
-80216dcfedb9d8b2d21a37c9999da163da118cd6e47e571ae93c62ca3a4bbc0b
+3af1226767ac762a0d6f1e70567b1f28baf7a527b35eea3b904f357ba83ea693
 
 This candidate includes the weather panel, Aether wallpaper integration,
 bar recovery, standard user folders, Xed as the text editor,
