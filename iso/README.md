@@ -22,7 +22,7 @@ Future ISO hashes may differ when Arch Linux packages or the ArchISO releng prof
 ## v1.0.1 candidate
 
 v1.0.1 installer candidate commit:
-5910418df7a36315cd5a7c32588482da1becfd0c
+10595a537197e0aae3540e26521e1460f0665836
 
 This candidate includes the weather panel, Aether wallpaper integration,
 bar recovery, standard user folders, and Xed as the text editor.
