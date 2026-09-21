@@ -6,6 +6,7 @@ VERSION="0.3.0"
 MOUNTPOINT="/mnt"
 REPO_URL="https://github.com/SSTechNoobs/rick-linux.git"
 SOURCE_DIR="/tmp/rick-linux-source"
+SOURCE_REF="${RICK_SOURCE_REF:-main}"
 
 red='\033[0;31m'; green='\033[0;32m'; yellow='\033[1;33m'; blue='\033[0;34m'; reset='\033[0m'
 
@@ -80,9 +81,12 @@ fetch_installer_sources(){
   rm -rf "$SOURCE_DIR"
 
   git clone \
-    --depth 1 \
     "$REPO_URL" \
     "$SOURCE_DIR" >/dev/null
+
+  if [[ "$SOURCE_REF" != "main" ]]; then
+    git -C "$SOURCE_DIR" checkout --detach "$SOURCE_REF" >/dev/null
+  fi
 
   [[ -x "$SOURCE_DIR/scripts/install-desktop.sh" ]] || \
     die "Desktop installer stage is missing."
