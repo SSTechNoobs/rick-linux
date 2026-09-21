@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -u
+
+QUEUE="Brother_HL_L2395DW"
+URI="ipp://Brother%20HL-L2395DW%20series._ipp._tcp.local/"
+
+# Already configured: just make sure it is the default.
+if lpstat -p "$QUEUE" >/dev/null 2>&1; then
+    lpadmin -d "$QUEUE" >/dev/null 2>&1 || true
+    exit 0
+fi
+
+# Wait until the Brother is visible on the network.
+if ! lpinfo -v 2>/dev/null | grep -qi 'HL-L2395DW'; then
+    exit 75
+fi
+
+# Create a permanent IPP Everywhere queue.
+if lpadmin \
+    -p "$QUEUE" \
+    -E \
+    -v "$URI" \
+    -m everywhere
+then
+    lpadmin -d "$QUEUE"
+    exit 0
+fi
+
+exit 75

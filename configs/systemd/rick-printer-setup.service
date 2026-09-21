@@ -1,0 +1,13 @@
+[Unit]
+Description=Ricks Linux Brother HL-L2395DW setup
+After=NetworkManager.service avahi-daemon.service cups.service
+Wants=NetworkManager.service avahi-daemon.service cups.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rick-printer-setup
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

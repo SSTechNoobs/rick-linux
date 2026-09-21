@@ -87,6 +87,18 @@ do
 done
 
 # ------------------------------------------------------------
+# Automatic Brother printer setup
+# ------------------------------------------------------------
+
+info "Installing Brother HL-L2395DW automatic printer setup..."
+
+install -m 0755     "$SOURCE_DIR/scripts/system/rick-printer-setup"     "$MOUNTPOINT/usr/local/sbin/rick-printer-setup"
+
+install -m 0644     "$SOURCE_DIR/configs/systemd/rick-printer-setup.service"     "$MOUNTPOINT/etc/systemd/system/rick-printer-setup.service"
+
+arch-chroot "$MOUNTPOINT"     systemctl enable rick-printer-setup.service
+
+# ------------------------------------------------------------
 # mDNS / .local support for network printers
 # ------------------------------------------------------------
 
