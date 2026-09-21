@@ -120,7 +120,14 @@ info "Installing Ricks Linux user configuration..."
 install -d \
     "$USER_HOME/.config/quickshell/rick/icons" \
     "$USER_HOME/.config/hypr" \
-    "$USER_HOME/.local/bin"
+    "$USER_HOME/.config/aether/custom/ricks-wallpaper" \
+    "$USER_HOME/.local/bin" \
+    "$USER_HOME/Desktop" \
+    "$USER_HOME/Documents" \
+    "$USER_HOME/Downloads" \
+    "$USER_HOME/Music" \
+    "$USER_HOME/Pictures" \
+    "$USER_HOME/Videos"
 
 install -m 0644 \
     "$SOURCE_DIR/configs/quickshell/rick/shell.qml" \
@@ -133,6 +140,35 @@ cp -a \
 install -m 0644 \
     "$SOURCE_DIR/configs/hypr/hyprland.lua" \
     "$USER_HOME/.config/hypr/hyprland.lua"
+
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/aether/custom/ricks-wallpaper/config.json" \
+    "$USER_HOME/.config/aether/custom/ricks-wallpaper/config.json"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/aether/custom/ricks-wallpaper/wallpaper.txt" \
+    "$USER_HOME/.config/aether/custom/ricks-wallpaper/wallpaper.txt"
+
+install -m 0755 \
+    "$SOURCE_DIR/configs/aether/custom/ricks-wallpaper/post-apply.sh" \
+    "$USER_HOME/.config/aether/custom/ricks-wallpaper/post-apply.sh"
+
+cat > "$USER_HOME/.config/user-dirs.dirs" <<'EOF_XDG'
+XDG_DESKTOP_DIR="$HOME/Desktop"
+XDG_DOCUMENTS_DIR="$HOME/Documents"
+XDG_DOWNLOAD_DIR="$HOME/Downloads"
+XDG_MUSIC_DIR="$HOME/Music"
+XDG_PICTURES_DIR="$HOME/Pictures"
+XDG_VIDEOS_DIR="$HOME/Videos"
+XDG_TEMPLATES_DIR="$HOME/"
+XDG_PUBLICSHARE_DIR="$HOME/"
+EOF_XDG
+
+cat > "$USER_HOME/.config/hypr/hyprland.conf" <<'EOF_HYPRCONF'
+exec-once = ~/.local/bin/rick-bar-watchdog
+exec-once = ~/.local/bin/rick-wallpaper-apply
+EOF_HYPRCONF
 
 for optional in hyprtoolkit.conf hyprlauncher.conf; do
     if [[ -f "$SOURCE_DIR/configs/hypr/$optional" ]]; then

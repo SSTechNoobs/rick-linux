@@ -36,6 +36,8 @@ ShellRoot {
     property string netStatus: "Checking..."
     property string btStatus: "..."
     property string volumeStatus: "..."
+    property string weatherStatus: "Weather..."
+    property string forecastStatus: "Loading forecast..."
 
     SystemClock {
         id: clock
@@ -75,6 +77,58 @@ ShellRoot {
         }
     }
 
+
+
+    Process {
+        id: forecastProc
+        command: ["/home/rick/.local/bin/rick-weather-detail"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+                if (value.length)
+                    root.forecastStatus = value
+            }
+        }
+    }
+
+    Timer {
+        id: weatherCloseTimer
+        interval: 500
+        repeat: false
+
+        onTriggered: {
+            if (!weatherPopup.pinned)
+                weatherPopup.visible = false
+        }
+    }
+
+    Process {
+        id: weatherProc
+        command: ["sh", "-c", "curl -fsS --max-time 8 'https://wttr.in/Cedar+Falls,Iowa?format=%c%20%t&u'"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+                if (value.length)
+                    root.weatherStatus = value
+            }
+        }
+    }
+
+    Timer {
+        interval: 900000
+        running: true
+        repeat: true
+
+        onTriggered: {
+            if (!weatherProc.running)
+                weatherProc.running = true
+        }
+    }
+
     Timer {
         interval: 2000
         running: true
@@ -92,6 +146,7 @@ ShellRoot {
 
     PanelWindow {
         id: bar
+        property bool solidBar: false
 
         anchors {
             bottom: true
@@ -100,7 +155,13 @@ ShellRoot {
         }
 
         implicitHeight: 44
-        color: "#111827"
+        color: solidBar ? "#111827" : "#330C2340"
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onDoubleClicked: bar.solidBar = !bar.solidBar
+        }
 
         Rectangle {
             id: powerButton
@@ -362,10 +423,106 @@ Rectangle {
         }
 
         Text {
+            id: hyprLabel
             anchors.centerIn: parent
             text: "Hyprland"
             color: "#9ca3af"
             font.pixelSize: 14
+        }
+
+        Text {
+            id: weatherLabel
+            anchors.left: hyprLabel.right
+            anchors.leftMargin: 16
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.weatherStatus
+            color: "#ffffff"
+            font.pixelSize: 14
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+
+                onEntered: {
+                    weatherCloseTimer.stop()
+                    weatherPopup.visible = true
+
+                    if (!forecastProc.running)
+                        forecastProc.running = true
+                }
+
+                onExited: {
+                    if (!weatherPopup.pinned)
+                        weatherCloseTimer.restart()
+                }
+
+                onClicked: {
+                    weatherCloseTimer.stop()
+
+                    if (weatherPopup.pinned) {
+                        weatherPopup.pinned = false
+                        weatherPopup.visible = false
+                    } else {
+                        weatherPopup.pinned = true
+                        weatherPopup.visible = true
+
+                        if (!forecastProc.running)
+                            forecastProc.running = true
+                    }
+                }
+            }
+        }
+
+        PopupWindow {
+            id: weatherPopup
+            property bool pinned: false
+
+            anchor.window: bar
+            anchor.rect.x: Math.max(
+                10,
+                Math.min(
+                    bar.width - width - 10,
+                    weatherLabel.x + weatherLabel.width / 2 - width / 2
+                )
+            )
+            anchor.rect.y: -height
+
+            width: 650
+            height: 780
+            visible: false
+            color: "transparent"
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 12
+                color: "#E60C2340"
+                border.color: "#7F9695"
+                border.width: 1
+
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 16
+
+                    text: root.forecastStatus
+                    color: "#ffffff"
+                    font.pixelSize: 13
+                    font.family: "monospace"
+                    verticalAlignment: Text.AlignTop
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+
+                    onEntered: weatherCloseTimer.stop()
+
+                    onExited: {
+                        if (!weatherPopup.pinned)
+                            weatherCloseTimer.restart()
+                    }
+                }
+            }
         }
 
         Row {

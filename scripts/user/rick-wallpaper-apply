@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+THEME="$HOME/.config/aether/theme"
+POINTER="$THEME/ricks-wallpaper-wallpaper.txt"
+
+WALLPAPER=""
+
+if [[ -s "$POINTER" ]]; then
+    WALLPAPER="$(head -n1 "$POINTER")"
+fi
+
+if [[ ! -f "$WALLPAPER" ]]; then
+    WALLPAPER="$(find "$THEME/backgrounds" -maxdepth 1 -type f -print -quit 2>/dev/null)"
+fi
+
+[[ -n "$WALLPAPER" && -f "$WALLPAPER" ]] || exit 0
+
+pkill -x swaybg 2>/dev/null || true
+sleep 0.2
+
+nohup swaybg \
+    -i "$WALLPAPER" \
+    -m fill \
+    >/tmp/rick-swaybg.log 2>&1 &

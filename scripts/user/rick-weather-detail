@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+import json
+import urllib.request
+from datetime import datetime
+
+URL = (
+    "https://api.open-meteo.com/v1/forecast"
+    "?latitude=42.5195&longitude=-92.4455"
+    "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m"
+    "&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m"
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"
+    "&temperature_unit=fahrenheit"
+    "&wind_speed_unit=mph"
+    "&timezone=America%2FChicago"
+    "&forecast_days=10"
+)
+
+def condition(code):
+    code = int(code)
+
+    if code == 0:
+        return "☀ Clear"
+    if code in (1, 2):
+        return "🌤 Partly Cloudy"
+    if code == 3:
+        return "☁ Cloudy"
+    if code in (45, 48):
+        return "🌫 Fog"
+    if code in (51, 53, 55):
+        return "🌦 Drizzle"
+    if code in (56, 57, 61, 63, 65, 66, 67):
+        return "🌧 Rain"
+    if code in (71, 73, 75, 77):
+        return "❄ Snow"
+    if code in (80, 81, 82):
+        return "🌦 Showers"
+    if code in (85, 86):
+        return "🌨 Snow Showers"
+    if code in (95, 96, 99):
+        return "⛈ Thunderstorms"
+
+    return "• Weather"
+
+def clock(value):
+    return datetime.fromisoformat(value).strftime("%-I:%M %p")
+
+try:
+    req = urllib.request.Request(
+        URL,
+        headers={"User-Agent": "Ricks-Linux-Weather"}
+    )
+
+    with urllib.request.urlopen(req, timeout=10) as r:
+        data = json.load(r)
+
+    c = data["current"]
+    h = data["hourly"]
+    d = data["daily"]
+
+    print("Cedar Falls, Iowa")
+    print()
+
+    print(
+        f"Now: {condition(c['weather_code'])}   "
+        f"{round(c['temperature_2m'])}°F"
+    )
+
+    print(
+        f"Feels {round(c['apparent_temperature'])}°F   "
+        f"Humidity {round(c['relative_humidity_2m'])}%   "
+        f"Wind {round(c['wind_speed_10m'])} mph"
+    )
+
+    print(
+        f"Today: High {round(d['temperature_2m_max'][0])}°   "
+        f"Low {round(d['temperature_2m_min'][0])}°   "
+        f"Rain {round(d['precipitation_probability_max'][0])}%"
+    )
+
+    print(
+        f"Sunrise {clock(d['sunrise'][0])}   "
+        f"Sunset {clock(d['sunset'][0])}"
+    )
+
+    print()
+    print("Next 12 Hours")
+
+    now = datetime.fromisoformat(c["time"])
+    indexes = []
+
+    for i, value in enumerate(h["time"]):
+        t = datetime.fromisoformat(value)
+        if t >= now:
+            indexes.append(i)
+        if len(indexes) == 12:
+            break
+
+    for i in indexes:
+        t = datetime.fromisoformat(h["time"][i])
+
+        print(
+            f"{t.strftime('%-I %p'):>5}  "
+            f"{round(h['temperature_2m'][i]):>3}°  "
+            f"Feels {round(h['apparent_temperature'][i]):>3}°  "
+            f"Rain {round(h['precipitation_probability'][i]):>3}%  "
+            f"Wind {round(h['wind_speed_10m'][i]):>2} mph  "
+            f"{condition(h['weather_code'][i])}"
+        )
+
+    print()
+    print("10-Day Forecast")
+
+    for i in range(10):
+        day = datetime.fromisoformat(d["time"][i]).strftime("%a %b %-d")
+
+        print(
+            f"{day:<11} "
+            f"H {round(d['temperature_2m_max'][i]):>3}°  "
+            f"L {round(d['temperature_2m_min'][i]):>3}°  "
+            f"Rain {round(d['precipitation_probability_max'][i]):>3}%  "
+            f"{condition(d['weather_code'][i])}"
+        )
+
+except Exception as e:
+    print("Cedar Falls Weather")
+    print()
+    print("Weather details unavailable.")

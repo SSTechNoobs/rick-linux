@@ -38,3 +38,5 @@ fastfetch
 brightnessctl
 playerctl
 less
+swaybg
+xdg-user-dirs
