@@ -62,12 +62,10 @@ sed -i \
     '/^#\[multilib\]$/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' \
     "$MOUNTPOINT/etc/pacman.conf"
 
-arch-chroot "$MOUNTPOINT" pacman -Sy
-
-info "Installing Steam..."
+info "Installing Steam and multilib graphics support..."
 
 arch-chroot "$MOUNTPOINT" pacman \
-    -S \
+    -Syu \
     --needed \
     --noconfirm \
     steam \
