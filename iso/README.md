@@ -22,9 +22,10 @@ Future ISO hashes may differ when Arch Linux packages or the ArchISO releng prof
 ## v1.0.1 candidate
 
 v1.0.1 installer candidate commit:
-10595a537197e0aae3540e26521e1460f0665836
+2b9078cc1d7f85011c0ebe8431a7c9cf7d2fed11
 
 This candidate includes the weather panel, Aether wallpaper integration,
-bar recovery, standard user folders, and Xed as the text editor.
+bar recovery, standard user folders, Xed as the text editor,
+and automatic Brother HL-L2395DW printer setup.
 
 The v1.0.1 ISO has not yet been clean-install tested.
