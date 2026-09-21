@@ -1,6 +1,6 @@
 [[ -f ~/.bashrc ]] && . ~/.bashrc
 
 # Ricks Linux automatic Hyprland startup
-if [[ -z "${DISPLAY:-}" && "${XDG_VTNR:-0}" == "1" ]]; then
+if [[ "$(tty 2>/dev/null)" == "/dev/tty1" && -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
     exec start-hyprland
 fi

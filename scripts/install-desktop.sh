@@ -257,7 +257,8 @@ EOF_AUR
 
 arch-chroot "$MOUNTPOINT" \
     runuser -u "$USERNAME" -- \
-    bash -lc "$AUR_COMMAND"
+    env HOME="/home/$USERNAME" USER="$USERNAME" LOGNAME="$USERNAME" \
+    bash --noprofile --norc -c "$AUR_COMMAND"
 
 rm -f "$TEMP_SUDO"
 TEMP_SUDO=""
