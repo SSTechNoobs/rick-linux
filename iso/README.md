@@ -19,13 +19,19 @@ Clean-install-tested ISO SHA256:
 Future ISO hashes may differ when Arch Linux packages or the ArchISO releng profile change.
 
 
-## v1.0.1 candidate
+## v1.0.1
 
-v1.0.1 installer candidate commit:
+Verified installer payload commit:
 2b9078cc1d7f85011c0ebe8431a7c9cf7d2fed11
+
+Clean-install-tested ISO:
+rick-linux-2026.09.21-x86_64.iso
+
+Clean-install-tested ISO SHA256:
+80216dcfedb9d8b2d21a37c9999da163da118cd6e47e571ae93c62ca3a4bbc0b
 
 This candidate includes the weather panel, Aether wallpaper integration,
 bar recovery, standard user folders, Xed as the text editor,
 and automatic Brother HL-L2395DW printer setup.
 
-The v1.0.1 ISO has not yet been clean-install tested.
+The v1.0.1 ISO was successfully clean-install tested.
