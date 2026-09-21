@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_NAME="Rick Linux Installer"
-VERSION="0.2.0"
+APP_NAME="Ricks Linux Installer"
+VERSION="0.3.0"
 MOUNTPOINT="/mnt"
+REPO_URL="https://github.com/SSTechNoobs/rick-linux.git"
+SOURCE_DIR="/tmp/rick-linux-source"
 
 red='\033[0;31m'; green='\033[0;32m'; yellow='\033[1;33m'; blue='\033[0;34m'; reset='\033[0m'
 
@@ -23,8 +25,8 @@ trap 'on_error $LINENO' ERR
 banner(){
   cat <<'BANNER'
 =================================================
-              Rick Linux Installer
-          Arch Linux base installation
+             Ricks Linux Installer
+       Hyprland desktop installation
 =================================================
 BANNER
   printf "Version: %s\n\n" "$VERSION"
@@ -69,6 +71,26 @@ require_internet(){
 check_clock(){
   timedatectl set-ntp true >/dev/null 2>&1 || true
   ok "Clock synchronization requested."
+}
+
+
+fetch_installer_sources(){
+  info "Downloading Ricks Linux installation files..."
+
+  rm -rf "$SOURCE_DIR"
+
+  git clone \
+    --depth 1 \
+    "$REPO_URL" \
+    "$SOURCE_DIR" >/dev/null
+
+  [[ -x "$SOURCE_DIR/scripts/install-desktop.sh" ]] || \
+    die "Desktop installer stage is missing."
+
+  [[ -f "$SOURCE_DIR/configs/quickshell/rick/shell.qml" ]] || \
+    die "Ricks Linux desktop configuration is missing."
+
+  ok "Ricks Linux installation files downloaded."
 }
 
 ensure_mountpoint_clear(){
@@ -268,6 +290,18 @@ EOF_HOSTS
   ok "Base system configuration completed."
 }
 
+
+install_desktop(){
+  info "Installing the Ricks Linux Hyprland desktop..."
+
+  bash "$SOURCE_DIR/scripts/install-desktop.sh" \
+    "$MOUNTPOINT" \
+    "$USERNAME_VALUE" \
+    "$SOURCE_DIR"
+
+  ok "Ricks Linux desktop installed."
+}
+
 install_bootloader(){
   local root_uuid
   root_uuid="$(blkid -s UUID -o value "$ROOT_PART")"
@@ -285,7 +319,7 @@ editor no
 EOF_LOADER
 
   {
-    printf 'title   Rick Linux (Arch base)\n'
+    printf 'title   Ricks Linux\n'
     printf 'linux   /vmlinuz-linux\n'
     [[ -n "$MICROCODE_IMG" ]] && printf 'initrd  /%s\n' "$MICROCODE_IMG"
     printf 'initrd  /initramfs-linux.img\n'
@@ -293,7 +327,7 @@ EOF_LOADER
   } > "$MOUNTPOINT/boot/loader/entries/arch.conf"
 
   {
-    printf 'title   Rick Linux (fallback initramfs)\n'
+    printf 'title   Ricks Linux (fallback)\n'
     printf 'linux   /vmlinuz-linux\n'
     [[ -n "$MICROCODE_IMG" ]] && printf 'initrd  /%s\n' "$MICROCODE_IMG"
     printf 'initrd  /initramfs-linux-fallback.img\n'
@@ -311,6 +345,10 @@ verify_install(){
   [[ -f "$MOUNTPOINT/boot/loader/entries/arch.conf" ]] || die "systemd-boot entry is missing."
   [[ -f "$MOUNTPOINT/etc/fstab" ]] || die "fstab is missing."
   [[ -f "$MOUNTPOINT/etc/hostname" ]] || die "hostname configuration is missing."
+  [[ -f "$MOUNTPOINT/etc/rick-linux-release" ]] || die "Ricks Linux release marker is missing."
+  [[ -f "$MOUNTPOINT/home/$USERNAME_VALUE/.config/quickshell/rick/shell.qml" ]] || die "Quickshell configuration is missing."
+  [[ -f "$MOUNTPOINT/home/$USERNAME_VALUE/.config/hypr/hyprland.lua" ]] || die "Hyprland configuration is missing."
+  [[ -f "$MOUNTPOINT/etc/systemd/system/getty@tty1.service.d/autologin.conf" ]] || die "Automatic login configuration is missing."
   ok "Installation verification passed."
 }
 
@@ -322,19 +360,31 @@ finish(){
   cat <<EOF_DONE
 
 =================================================
-Rick Linux base installation is complete.
+Ricks Linux v$VERSION installation is complete.
 
 Target: $TARGET_DISK
 User:   $USERNAME_VALUE
 
+Installed:
+  - Hyprland desktop
+  - Quickshell Cowboys-themed bottom bar
+  - Ghostty
+  - Google Chrome
+  - Steam
+  - Aether
+  - PCManFM
+  - Mousepad
+  - Calculator
+  - Bluetooth / Network / Audio controls
+  - CUPS printer support
+  - Automatic desktop login
+
 Next:
   1. Type: reboot
-  2. Remove the Arch USB while the machine restarts.
+  2. Remove the installation USB while restarting.
   3. Boot the installed drive.
-  4. Log in at the console as $USERNAME_VALUE.
 
-This v$VERSION release intentionally stops at a basic Arch console.
-Hyprland will be added only after this base install boots successfully.
+Ricks Linux will automatically log in and start Hyprland.
 =================================================
 EOF_DONE
 }
@@ -348,6 +398,7 @@ main(){
   require_tools
   require_internet
   check_clock
+  fetch_installer_sources
   ensure_mountpoint_clear
   list_and_select_disk
   prompt_settings
@@ -357,6 +408,7 @@ main(){
   mount_target
   install_base
   configure_system
+  install_desktop
   install_bootloader
   verify_install
   finish

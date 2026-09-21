@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+clear
+
+printf '\033[38;2;0;53;148m'
+cat <<'LOGO'
+        ★
+   RICKS LINUX
+   ───────────
+LOGO
+
+printf '\033[38;2;176;183;188m'
+printf '   Dallas Cowboys Edition\n'
+printf '\033[0m'
+
+if [[ -r /etc/rick-linux-install-date ]]; then
+    RAW_DATE="$(cat /etc/rick-linux-install-date)"
+else
+    RAW_DATE="$(sed -n '1s/^\[\([^]]*\)\].*/\1/p' /var/log/pacman.log 2>/dev/null)"
+fi
+
+if [[ -n "$RAW_DATE" ]]; then
+    INSTALL_DATE="$(date -d "$RAW_DATE" '+%B %-d, %Y at %-I:%M %p' 2>/dev/null)"
+fi
+
+if [[ -z "$INSTALL_DATE" ]]; then
+    INSTALL_DATE="Unknown"
+fi
+
+printf '\n\033[38;2;176;183;188mInstalled:\033[0m %s\n\n' "$INSTALL_DATE"
+
+fastfetch --logo none \
+  --structure Host:Kernel:Uptime:Packages:Display:WM:Terminal:CPU:GPU:Memory:Disk:LocalIp
+
+echo
+printf '\033[38;2;176;183;188mPress any key to close...\033[0m'
+read -rsn1
