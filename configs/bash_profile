@@ -2,5 +2,18 @@
 
 # Ricks Linux automatic Hyprland startup
 if [[ "$(tty 2>/dev/null)" == "/dev/tty1" && -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-    exec start-hyprland
+    RICK_LOGOUT_MARKER="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ricks-linux-logged-out"
+
+    if [[ -f "$RICK_LOGOUT_MARKER" ]]; then
+        clear
+        echo "Ricks Linux"
+        echo
+        echo "Logged out."
+        echo
+        echo "Type: start-hyprland"
+        echo "to return to the desktop."
+        echo
+    else
+        exec start-hyprland >/dev/null 2>&1
+    fi
 fi

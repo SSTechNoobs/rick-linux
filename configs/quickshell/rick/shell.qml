@@ -674,7 +674,7 @@ Rectangle {
 
             Timer {
                 id: updateCheckTimer
-                interval: 900000
+                interval: 60000
                 running: true
                 repeat: true
 

@@ -53,6 +53,29 @@ arch-chroot "$MOUNTPOINT" pacman \
     "${DESKTOP_PACKAGES[@]}"
 
 # ------------------------------------------------------------
+# Ricks Linux Plymouth boot/shutdown theme
+# ------------------------------------------------------------
+
+info "Installing Ricks Linux boot and shutdown splash..."
+
+install -d \
+    "$MOUNTPOINT/usr/share/plymouth/themes/ricks-linux"
+
+cp -a \
+    "$SOURCE_DIR/configs/plymouth/ricks-linux/." \
+    "$MOUNTPOINT/usr/share/plymouth/themes/ricks-linux/"
+
+sed -i \
+    's/^HOOKS=.*/HOOKS=(base systemd plymouth autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)/' \
+    "$MOUNTPOINT/etc/mkinitcpio.conf"
+
+arch-chroot "$MOUNTPOINT" \
+    plymouth-set-default-theme ricks-linux
+
+arch-chroot "$MOUNTPOINT" \
+    mkinitcpio -P
+
+# ------------------------------------------------------------
 # Enable multilib, then install Steam + 32-bit Intel Vulkan
 # ------------------------------------------------------------
 
@@ -141,6 +164,7 @@ install -d \
     "$USER_HOME/Downloads" \
     "$USER_HOME/Music" \
     "$USER_HOME/Pictures" \
+    "$USER_HOME/Pictures/RicksLinuxSplash" \
     "$USER_HOME/Videos"
 
 install -m 0644 \
@@ -150,6 +174,12 @@ install -m 0644 \
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/icons/." \
     "$USER_HOME/.config/quickshell/rick/icons/"
+
+
+cp -a \
+    "$SOURCE_DIR/configs/splash/RicksLinuxSplash/." \
+    "$USER_HOME/Pictures/RicksLinuxSplash/"
+
 
 install -m 0644 \
     "$SOURCE_DIR/configs/hypr/hyprland.lua" \

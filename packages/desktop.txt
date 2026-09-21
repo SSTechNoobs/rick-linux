@@ -43,3 +43,4 @@ xdg-user-dirs
 mako
 pacman-contrib
 libnotify
+plymouth

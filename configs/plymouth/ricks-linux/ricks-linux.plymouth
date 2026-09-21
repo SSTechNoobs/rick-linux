@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Ricks Linux
+Description=Ricks Linux custom boot and shutdown splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/ricks-linux
+ScriptFile=/usr/share/plymouth/themes/ricks-linux/ricks-linux.script

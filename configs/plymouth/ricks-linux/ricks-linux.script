@@ -1,0 +1,38 @@
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+mode = Plymouth.GetMode();
+
+if (mode == "shutdown" || mode == "reboot")
+{
+    background_image = Image("shutdown.png");
+}
+else
+{
+    background_image = Image("boot.png");
+}
+
+screen_ratio = screen_height / screen_width;
+image_ratio = background_image.GetHeight() / background_image.GetWidth();
+
+if (screen_ratio > image_ratio)
+{
+    scale = screen_height / background_image.GetHeight();
+}
+else
+{
+    scale = screen_width / background_image.GetWidth();
+}
+
+background_image = background_image.Scale(
+    background_image.GetWidth() * scale,
+    background_image.GetHeight() * scale
+);
+
+background_sprite = Sprite(background_image);
+
+background_sprite.SetPosition(
+    (screen_width - background_image.GetWidth()) / 2,
+    (screen_height - background_image.GetHeight()) / 2,
+    0
+);

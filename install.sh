@@ -317,7 +317,7 @@ install_bootloader(){
   mkdir -p "$MOUNTPOINT/boot/loader/entries"
   cat > "$MOUNTPOINT/boot/loader/loader.conf" <<'EOF_LOADER'
 default arch.conf
-timeout 3
+timeout 1
 console-mode auto
 editor no
 EOF_LOADER
@@ -327,7 +327,7 @@ EOF_LOADER
     printf 'linux   /vmlinuz-linux\n'
     [[ -n "$MICROCODE_IMG" ]] && printf 'initrd  /%s\n' "$MICROCODE_IMG"
     printf 'initrd  /initramfs-linux.img\n'
-    printf 'options root=UUID=%s rw\n' "$root_uuid"
+    printf 'options root=UUID=%s rw quiet splash\n' "$root_uuid"
   } > "$MOUNTPOINT/boot/loader/entries/arch.conf"
 
   {
@@ -335,7 +335,7 @@ EOF_LOADER
     printf 'linux   /vmlinuz-linux\n'
     [[ -n "$MICROCODE_IMG" ]] && printf 'initrd  /%s\n' "$MICROCODE_IMG"
     printf 'initrd  /initramfs-linux-fallback.img\n'
-    printf 'options root=UUID=%s rw\n' "$root_uuid"
+    printf 'options root=UUID=%s rw quiet splash\n' "$root_uuid"
   } > "$MOUNTPOINT/boot/loader/entries/arch-fallback.conf"
 
   arch-chroot "$MOUNTPOINT" bootctl --path=/boot list >/dev/null || warn "bootctl list reported a warning; boot files were still written to the EFI partition."
