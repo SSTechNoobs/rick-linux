@@ -9,6 +9,15 @@ ShellRoot {
     id: root
 
     HyprlandFocusGrab {
+        id: powerMenuGrab
+        windows: [powerMenu]
+
+        onCleared: {
+            powerMenu.visible = false
+        }
+    }
+
+    HyprlandFocusGrab {
         id: appMenuGrab
         windows: [appMenu]
 
@@ -198,6 +207,16 @@ ShellRoot {
             visible: false
             color: "transparent"
 
+            onVisibleChanged: {
+                if (visible) {
+                    Qt.callLater(function() {
+                        powerMenuGrab.active = true
+                    })
+                } else {
+                    powerMenuGrab.active = false
+                }
+            }
+
             Rectangle {
                 anchors.fill: parent
                 radius: 10
@@ -210,6 +229,29 @@ ShellRoot {
                     anchors.margins: 8
                     spacing: 4
 
+                    Rectangle {
+                        width: 154
+                        height: 35
+                        radius: 6
+                        color: logoutMouse.containsMouse ? "#1f3d63" : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Log Out"
+                            color: "white"
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            id: logoutMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                powerMenu.visible = false
+                                Quickshell.execDetached(["/home/rick/.local/bin/rick-logout"])
+                            }
+                        }
+                    }
                     Rectangle {
                         width: 154
                         height: 35
@@ -233,7 +275,6 @@ ShellRoot {
                             }
                         }
                     }
-
                     Rectangle {
                         width: 154
                         height: 35
@@ -254,30 +295,6 @@ ShellRoot {
                             onClicked: {
                                 powerMenu.visible = false
                                 Quickshell.execDetached(["systemctl", "reboot"])
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: 154
-                        height: 35
-                        radius: 6
-                        color: logoutMouse.containsMouse ? "#1f3d63" : "transparent"
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "Log Out"
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-
-                        MouseArea {
-                            id: logoutMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                powerMenu.visible = false
-                                Quickshell.execDetached(["hyprctl", "dispatch", "exit"])
                             }
                         }
                     }
@@ -635,6 +652,87 @@ Rectangle {
                     onExited: calendarHideTimer.restart()
                 }
 }
+
+            Process {
+                id: updateCountProc
+
+                command: [
+                    "bash",
+                    "-lc",
+                    "{ checkupdates 2>/dev/null || true; yay -Qua 2>/dev/null || true; } | sed '/^$/d' | wc -l"
+                ]
+
+                running: true
+
+                stdout: StdioCollector {
+                    onStreamFinished: {
+                        var n = parseInt(this.text.trim())
+                        updateButton.updateCount = isNaN(n) ? 0 : n
+                    }
+                }
+            }
+
+            Timer {
+                id: updateCheckTimer
+                interval: 900000
+                running: true
+                repeat: true
+
+                onTriggered: {
+                    if (!updateCountProc.running)
+                        updateCountProc.running = true
+                }
+            }
+
+            Timer {
+                id: updateAfterClickTimer
+                interval: 120000
+                repeat: false
+
+                onTriggered: {
+                    if (!updateCountProc.running)
+                        updateCountProc.running = true
+                }
+            }
+
+            Rectangle {
+                id: updateButton
+
+                property int updateCount: 0
+
+                width: updateCount > 0 ? 48 : 34
+                height: 32
+                radius: 8
+                color: updateMouse.containsMouse ? "#25364d" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: updateButton.updateCount > 0
+                          ? "⬆ " + updateButton.updateCount
+                          : "⬆"
+                    color: updateButton.updateCount > 0 ? "#ffffff" : "#869397"
+                    font.pixelSize: 14
+                    font.bold: updateButton.updateCount > 0
+                }
+
+                MouseArea {
+                    id: updateMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+
+                    onClicked: {
+                        Quickshell.execDetached([
+                            "ghostty",
+                            "-e",
+                            "bash",
+                            "-lc",
+                            "yay -Syu; rc=$?; echo; if [ $rc -eq 0 ]; then echo 'Updates finished.'; else echo 'Update returned an error.'; fi; echo; echo 'This window will close in 5 seconds...'; sleep 5; exit $rc"
+                        ])
+
+                        updateAfterClickTimer.restart()
+                    }
+                }
+            }
 
             Timer {
                 id: calendarHideTimer

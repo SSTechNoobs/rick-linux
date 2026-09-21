@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+sudo mkdir -p /run/ricks-linux
+touch /run/ricks-linux/logged-out
+
+if command -v hyprshutdown >/dev/null 2>&1; then
+    exec hyprshutdown --no-fork
+else
+    exec hyprctl dispatch 'hl.dsp.exit()'
+fi

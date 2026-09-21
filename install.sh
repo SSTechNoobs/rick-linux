@@ -115,7 +115,11 @@ list_and_select_disk(){
 
   ((${#DISKS[@]} > 0)) || die "No non-USB physical disks were found."
 
-  printf "\nInternal installation targets:\n\n"
+  printf "\n"
+  warn "THE NEXT DRIVE SELECTION IS DESTRUCTIVE."
+  warn "Selecting a valid number will immediately ERASE that entire drive and start installation."
+  warn "There is no second confirmation after the drive is selected."
+  printf "\nChoose the drive to ERASE & INSTALL:\n\n"
   for i in "${!DISKS[@]}"; do
     disk="${DISKS[$i]}"
     printf "  %d) %s\n" "$((i+1))" "$disk"
@@ -124,7 +128,7 @@ list_and_select_disk(){
   done
 
   while true; do
-    read -r -p "Select target disk [1-${#DISKS[@]}]: " choice
+    read -r -p "ERASE & INSTALL on drive [1-${#DISKS[@]}]: " choice
     [[ "$choice" =~ ^[0-9]+$ ]] || { warn "Enter a number from the list."; continue; }
     (( choice >= 1 && choice <= ${#DISKS[@]} )) || { warn "Selection out of range."; continue; }
     TARGET_DISK="${DISKS[$((choice-1))]}"
@@ -400,10 +404,9 @@ main(){
   check_clock
   fetch_installer_sources
   ensure_mountpoint_clear
-  list_and_select_disk
   prompt_settings
   detect_microcode
-  confirm_erase
+  list_and_select_disk
   partition_and_format
   mount_target
   install_base

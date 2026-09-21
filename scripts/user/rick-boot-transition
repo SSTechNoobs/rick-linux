@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+BOOT="$HOME/Pictures/RicksLinuxSplash/boot.png"
+
+# Immediately keep the Ricks Linux boot image on screen
+if [[ -f "$BOOT" ]]; then
+    pkill -x swaybg 2>/dev/null || true
+    sleep 0.1
+
+    nohup swaybg \
+        -i "$BOOT" \
+        -m fill \
+        >/tmp/rick-boot-swaybg.log 2>&1 &
+fi
+
+# Make sure the bar recovery watchdog is running
+if ! pgrep -f "$HOME/.local/bin/rick-bar-watchdog" >/dev/null; then
+    nohup "$HOME/.local/bin/rick-bar-watchdog" \
+        >/tmp/rick-bar-watchdog.log 2>&1 &
+fi
+
+# Keep the boot image until Quickshell/taskbar is running
+for i in $(seq 1 40); do
+    if pgrep -x qs >/dev/null; then
+        sleep 2
+        break
+    fi
+
+    sleep 0.25
+done
+
+# Desktop is ready: switch to the normal Aether wallpaper
+"$HOME/.local/bin/rick-wallpaper-apply"

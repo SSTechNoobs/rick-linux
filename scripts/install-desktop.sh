@@ -133,6 +133,8 @@ install -d \
     "$USER_HOME/.config/quickshell/rick/icons" \
     "$USER_HOME/.config/hypr" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper" \
+    "$USER_HOME/.config/systemd/user/timers.target.wants" \
+    "$USER_HOME/.config/systemd/user/graphical-session.target.wants" \
     "$USER_HOME/.local/bin" \
     "$USER_HOME/Desktop" \
     "$USER_HOME/Documents" \
@@ -197,6 +199,24 @@ for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
         "$helper" \
         "$USER_HOME/.local/bin/$(basename "$helper")"
 done
+
+# Weekly Ricks Linux update checker.
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-update-check.service" \
+    "$USER_HOME/.config/systemd/user/rick-update-check.service"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-update-check.timer" \
+    "$USER_HOME/.config/systemd/user/rick-update-check.timer"
+
+ln -sfn \
+    ../rick-update-check.timer \
+    "$USER_HOME/.config/systemd/user/timers.target.wants/rick-update-check.timer"
+
+# Enable Mako notification daemon for the graphical Wayland session.
+ln -sfn \
+    /usr/lib/systemd/user/mako.service \
+    "$USER_HOME/.config/systemd/user/graphical-session.target.wants/mako.service"
 
 install -m 0644 \
     "$SOURCE_DIR/configs/bash_profile" \

@@ -1,0 +1,6 @@
+[Unit]
+Description=Ricks Linux weekly update check
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rick-update-check

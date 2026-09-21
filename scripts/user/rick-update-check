@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+repo_updates="$(checkupdates --nocolor 2>/dev/null || true)"
+aur_updates="$(yay -Qua --nocolor 2>/dev/null || true)"
+
+repo_count="$(printf '%s\n' "$repo_updates" | sed '/^$/d' | wc -l)"
+aur_count="$(printf '%s\n' "$aur_updates" | sed '/^$/d' | wc -l)"
+
+total=$((repo_count + aur_count))
+
+if (( total > 0 )); then
+    names="$(
+        {
+            printf '%s\n' "$repo_updates"
+            printf '%s\n' "$aur_updates"
+        } |
+        sed '/^$/d' |
+        awk '{print $1}' |
+        head -8 |
+        paste -sd, - |
+        sed 's/,/, /g'
+    )"
+
+    body="$total update(s) available
+Official: $repo_count
+AUR: $aur_count"
+
+    if [[ -n "$names" ]]; then
+        body="$body
+
+$names"
+    fi
+
+    body="$body
+
+Run: yay"
+
+    notify-send \
+        -a "Ricks Linux" \
+        -u normal \
+        -i system-software-update \
+        "Ricks Linux Updates Available" \
+        "$body"
+fi

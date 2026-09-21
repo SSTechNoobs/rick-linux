@@ -368,3 +368,28 @@ hl.window_rule({
 hl.on("hyprland.start", function()
     hl.exec_cmd("qs -c rick")
 end)
+
+-- Ricks Linux session services
+hl.on("hyprland.start", function()
+    hl.exec_cmd("/home/rick/.local/bin/rick-session-start")
+end)
+
+
+-- Ricks Linux permanent branding
+hl.config({
+    misc = {
+        force_default_wallpaper = 0,
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+    },
+    ecosystem = {
+        no_update_news = true,
+    },
+})
+
+
+
+-- Ricks Linux boot transition
+hl.on("hyprland.start", function()
+    hl.exec_cmd("/home/rick/.local/bin/rick-boot-transition")
+end)

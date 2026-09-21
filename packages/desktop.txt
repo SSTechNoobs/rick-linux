@@ -40,3 +40,6 @@ playerctl
 less
 swaybg
 xdg-user-dirs
+mako
+pacman-contrib
+libnotify
