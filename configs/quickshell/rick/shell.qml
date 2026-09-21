@@ -855,8 +855,8 @@ Rectangle {
                                         cmd: ["ghostty"]
                                     },
                                     {
-                                        name: "Mousepad",
-                                        cmd: ["mousepad"]
+                                        name: "Xed",
+                                        cmd: ["xed"]
                                     },
                                     {
                                         name: "PCManFM Files",

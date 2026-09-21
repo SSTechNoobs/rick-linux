@@ -27,7 +27,7 @@ blueman
 pavucontrol
 pcmanfm
 gvfs
-mousepad
+xed
 gnome-calculator
 cups
 cups-pk-helper

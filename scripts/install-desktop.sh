@@ -105,7 +105,7 @@ fi
 cat > "$MOUNTPOINT/etc/rick-linux-release" <<'RICK_RELEASE'
 NAME="Ricks Linux"
 ID=rick-linux
-VERSION="0.3.0"
+VERSION="1.0.1"
 BASE="Arch Linux"
 RICK_RELEASE
 
@@ -311,7 +311,7 @@ for command in \
     qs \
     ghostty \
     pcmanfm \
-    mousepad \
+    xed \
     gnome-calculator \
     pavucontrol \
     fastfetch \
