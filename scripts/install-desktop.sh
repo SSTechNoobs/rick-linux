@@ -165,6 +165,7 @@ install -d \
     "$USER_HOME/Music" \
     "$USER_HOME/Pictures" \
     "$USER_HOME/Pictures/RicksLinuxSplash" \
+    "$USER_HOME/Pictures/RicksLinuxWallpaper" \
     "$USER_HOME/Videos"
 
 install -m 0644 \
@@ -179,6 +180,10 @@ cp -a \
 cp -a \
     "$SOURCE_DIR/configs/splash/RicksLinuxSplash/." \
     "$USER_HOME/Pictures/RicksLinuxSplash/"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/wallpaper/wallpaper.png" \
+    "$USER_HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
 
 
 install -m 0644 \

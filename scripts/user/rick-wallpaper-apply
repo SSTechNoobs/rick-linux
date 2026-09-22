@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 
+PERMANENT="$HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
 THEME="$HOME/.config/aether/theme"
 POINTER="$THEME/ricks-wallpaper-wallpaper.txt"
 
 WALLPAPER=""
 
-if [[ -s "$POINTER" ]]; then
-    WALLPAPER="$(head -n1 "$POINTER")"
+# Ricks Linux permanent wallpaper always wins.
+if [[ -f "$PERMANENT" ]]; then
+    WALLPAPER="$PERMANENT"
+elif [[ -s "$POINTER" ]]; then
+    candidate="$(head -n1 "$POINTER")"
+    [[ -f "$candidate" ]] && WALLPAPER="$candidate"
 fi
 
-if [[ ! -f "$WALLPAPER" ]]; then
-    WALLPAPER="$(find "$THEME/backgrounds" -maxdepth 1 -type f -print -quit 2>/dev/null)"
+if [[ -z "$WALLPAPER" || ! -f "$WALLPAPER" ]]; then
+    WALLPAPER="$(find "$THEME/backgrounds" \
+        -maxdepth 1 -type f -print -quit 2>/dev/null)"
 fi
 
 [[ -n "$WALLPAPER" && -f "$WALLPAPER" ]] || exit 0
