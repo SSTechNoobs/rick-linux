@@ -1,0 +1,13 @@
+# Local backups
+backups/
+
+# Never store secrets
+*.key
+*.pem
+.env
+.env.*
+
+# Temporary files
+*.tmp
+*.bak
+*~
