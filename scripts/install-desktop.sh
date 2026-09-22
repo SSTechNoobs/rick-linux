@@ -154,6 +154,7 @@ info "Installing Ricks Linux user configuration..."
 
 install -d \
     "$USER_HOME/.config/quickshell/rick/icons" \
+    "$USER_HOME/.config/quickshell/rick/weather-icons" \
     "$USER_HOME/.config/hypr" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper" \
     "$USER_HOME/.config/systemd/user/timers.target.wants" \
@@ -175,6 +176,10 @@ install -m 0644 \
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/icons/." \
     "$USER_HOME/.config/quickshell/rick/icons/"
+
+cp -a \
+    "$SOURCE_DIR/configs/quickshell/rick/weather-icons/." \
+    "$USER_HOME/.config/quickshell/rick/weather-icons/"
 
 
 cp -a \

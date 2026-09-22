@@ -47,6 +47,7 @@ ShellRoot {
     property string volumeStatus: "..."
     property string weatherStatus: "Weather..."
     property string forecastStatus: "Loading forecast..."
+    property var weatherData: ({})
 
     SystemClock {
         id: clock
@@ -96,8 +97,16 @@ ShellRoot {
         stdout: StdioCollector {
             onStreamFinished: {
                 var value = this.text.trim()
-                if (value.length)
-                    root.forecastStatus = value
+
+                if (value.length) {
+                    try {
+                        root.weatherData = JSON.parse(value)
+                        root.forecastStatus = "Weather updated"
+                    } catch (e) {
+                        root.forecastStatus = "Weather error"
+                        console.log("Weather JSON error:", e)
+                    }
+                }
             }
         }
     }
@@ -504,27 +513,575 @@ Rectangle {
             )
             anchor.rect.y: -height
 
-            width: 650
-            height: 780
+            implicitWidth: 920
+            implicitHeight: 620
             visible: false
             color: "transparent"
-
             Rectangle {
+                id: weatherCard
                 anchors.fill: parent
-                radius: 12
-                color: "#E60C2340"
-                border.color: "#7F9695"
+                radius: 24
+                clip: true
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "#E82B6F98"
+                    }
+
+                    GradientStop {
+                        position: 0.55
+                        color: "#E818507A"
+                    }
+
+                    GradientStop {
+                        position: 1.0
+                        color: "#E80A2944"
+                    }
+                }
+
+                border.color: "#D0EFFFFF"
                 border.width: 1
 
-                Text {
+                Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 16
+                    radius: 24
+                    color: "transparent"
+                    border.color: "#66FFFFFF"
+                    border.width: 1
+                    opacity: 0.35
+                }
 
-                    text: root.forecastStatus
-                    color: "#ffffff"
-                    font.pixelSize: 13
-                    font.family: "monospace"
-                    verticalAlignment: Text.AlignTop
+                function iconFor(condition) {
+                    if (condition === "Clear")
+                        return "☀"
+
+                    if (condition === "Mostly Clear" ||
+                        condition === "Partly Cloudy")
+                        return "☀"
+
+                    if (condition === "Cloudy")
+                        return "☁"
+
+                    if (condition === "Fog")
+                        return "≋"
+
+                    if (condition === "Drizzle" ||
+                        condition === "Rain" ||
+                        condition === "Showers")
+                        return "☂"
+
+                    if (condition === "Snow")
+                        return "❄"
+
+                    if (condition === "Storm")
+                        return "⚡"
+
+                    return "☁"
+                }
+
+                function iconFile(condition) {
+                    if (condition === "Clear" ||
+                        condition === "Mostly Clear" ||
+                        condition === "Partly Cloudy")
+                        return "file:///home/rick/.config/quickshell/rick/weather-icons/sunny.svg"
+
+                    if (condition === "Rain" ||
+                        condition === "Drizzle" ||
+                        condition === "Showers")
+                        return "file:///home/rick/.config/quickshell/rick/weather-icons/rain.svg"
+
+                    return "file:///home/rick/.config/quickshell/rick/weather-icons/cloudy.svg"
+                }
+
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 14
+
+                    Column {
+                        width: 590
+                        spacing: 12
+
+                        Rectangle {
+                            width: 590
+                            height: 125
+                            radius: 19
+                            color: "#B8457395"
+                            border.color: "#508EB7CE"
+                            border.width: 1
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.margins: 16
+                                spacing: 18
+
+                                Image {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 62
+                                    height: 62
+
+                                    source: weatherCard.iconFile(
+                                        root.weatherData.current
+                                            ? root.weatherData.current.condition
+                                            : ""
+                                    )
+
+                                    fillMode: Image.PreserveAspectFit
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    text: root.weatherData.current
+                                        ? root.weatherData.current.temperature + "°"
+                                        : "--°"
+
+                                    color: "#FFFFFF"
+                                    font.pixelSize: 66
+                                    font.bold: true
+                                }
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: root.weatherData.location
+                                            || "Cedar Falls, Iowa"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 21
+                                        font.bold: true
+                                    }
+
+                                    Text {
+                                        text: root.weatherData.current
+                                            ? root.weatherData.current.condition
+                                            : "Loading..."
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                    }
+
+                                    Text {
+                                        text: root.weatherData.current
+                                            ? "Feels like "
+                                              + root.weatherData.current.feels
+                                              + "°"
+                                            : ""
+
+                                        color: "#D1E9F7"
+                                        font.pixelSize: 14
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "Hourly Forecast"
+                            color: "#FFFFFF"
+                            font.pixelSize: 17
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            width: 590
+                            height: 160
+                            radius: 19
+                            color: "#B83A5E7D"
+                            border.color: "#457FA8C0"
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 8
+
+                                Repeater {
+                                    model: root.weatherData.hourly
+                                        ? root.weatherData.hourly.slice(0, 6)
+                                        : []
+
+                                    delegate: Rectangle {
+                                        width: 86
+                                        height: 132
+                                        radius: 16
+                                        color: "#587EA4B2"
+                                        border.color: "#729DC0D2"
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 5
+
+                                            Text {
+                                                anchors.horizontalCenter:
+                                                    parent.horizontalCenter
+
+                                                text: Qt.formatDateTime(
+                                                    new Date(modelData.time),
+                                                    "h AP"
+                                                )
+
+                                                color: "#EAF7FF"
+                                                font.pixelSize: 12
+                                            }
+
+                                            Image {
+                                                anchors.horizontalCenter:
+                                                    parent.horizontalCenter
+
+                                                width: 32
+                                                height: 32
+
+                                                source: weatherCard.iconFile(
+                                                    modelData.condition
+                                                )
+
+                                                fillMode: Image.PreserveAspectFit
+                                            }
+
+                                            Text {
+                                                anchors.horizontalCenter:
+                                                    parent.horizontalCenter
+
+                                                text: modelData.temp + "°"
+                                                color: "#FFFFFF"
+                                                font.pixelSize: 20
+                                                font.bold: true
+                                            }
+
+                                            Text {
+                                                anchors.horizontalCenter:
+                                                    parent.horizontalCenter
+
+                                                text: "Rain " + modelData.rain + "%"
+                                                color: "#C8EAFF"
+                                                font.pixelSize: 10
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Row {
+                            spacing: 10
+
+                            Rectangle {
+                                width: 190
+                                height: 92
+                                radius: 17
+                                color: "#B84A7694"
+                                border.color: "#497E9EB0"
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+                                        text: "Humidity"
+                                        color: "#CDE8F7"
+                                        font.pixelSize: 13
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+
+                                        text: root.weatherData.current
+                                            ? "💧 "
+                                              + root.weatherData.current.humidity
+                                              + "%"
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 21
+                                        font.bold: true
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: 190
+                                height: 92
+                                radius: 17
+                                color: "#B84A7694"
+                                border.color: "#497E9EB0"
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+                                        text: "Wind"
+                                        color: "#CDE8F7"
+                                        font.pixelSize: 13
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+
+                                        text: root.weatherData.current
+                                            ? root.weatherData.current.wind
+                                              + " mph"
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 21
+                                        font.bold: true
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: 190
+                                height: 92
+                                radius: 17
+                                color: "#B84A7694"
+                                border.color: "#497E9EB0"
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+                                        text: "Rain Chance"
+                                        color: "#CDE8F7"
+                                        font.pixelSize: 13
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter:
+                                            parent.horizontalCenter
+
+                                        text: root.weatherData.daily
+                                            && root.weatherData.daily.length
+                                            ? root.weatherData.daily[0].rain
+                                              + "%"
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 21
+                                        font.bold: true
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: 590
+                            height: 83
+                            radius: 17
+                            color: "#B84A7694"
+                            border.color: "#497E9EB0"
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 95
+
+                                Column {
+                                    spacing: 4
+
+                                    Text {
+                                        text: "☀  Sunrise"
+                                        color: "#FFD86B"
+                                        font.pixelSize: 14
+                                    }
+
+                                    Text {
+                                        text: root.weatherData.sun
+                                            ? Qt.formatDateTime(
+                                                new Date(
+                                                    root.weatherData.sun.sunrise
+                                                ),
+                                                "h:mm AP"
+                                              )
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                    }
+                                }
+
+                                Column {
+                                    spacing: 4
+
+                                    Text {
+                                        text: "☀  Sunset"
+                                        color: "#FFB66B"
+                                        font.pixelSize: 14
+                                    }
+
+                                    Text {
+                                        text: root.weatherData.sun
+                                            ? Qt.formatDateTime(
+                                                new Date(
+                                                    root.weatherData.sun.sunset
+                                                ),
+                                                "h:mm AP"
+                                              )
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                    }
+                                }
+
+                                Column {
+                                    spacing: 4
+
+                                    Text {
+                                        text: "Today"
+                                        color: "#CDE8F7"
+                                        font.pixelSize: 14
+                                    }
+
+                                    Text {
+                                        text: root.weatherData.daily
+                                            && root.weatherData.daily.length
+                                            ? root.weatherData.daily[0].high
+                                              + "° / "
+                                              + root.weatherData.daily[0].low
+                                              + "°"
+                                            : "--"
+
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 18
+                                        font.bold: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        width: 280
+                        spacing: 10
+
+                        Rectangle {
+                            width: 280
+                            height: 52
+                            radius: 17
+                            color: "#B8457395"
+                            border.color: "#508EB7CE"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "10-Day Forecast"
+                                color: "#FFFFFF"
+                                font.pixelSize: 18
+                                font.bold: true
+                            }
+                        }
+
+                        Rectangle {
+                            width: 280
+                            height: 522
+                            radius: 19
+                            color: "#B83A5E7D"
+                            border.color: "#457FA8C0"
+
+                            Column {
+                                anchors.fill: parent
+                                anchors.margins: 9
+                                spacing: 4
+
+                                Repeater {
+                                    model: root.weatherData.daily
+                                        ? root.weatherData.daily.slice(0, 10)
+                                        : []
+
+                                    delegate: Rectangle {
+                                        width: 262
+                                        height: 46
+                                        radius: 12
+                                        color: index % 2 === 0
+                                            ? "#405F7E82"
+                                            : "#304D6A72"
+
+                                        Row {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 9
+                                            anchors.rightMargin: 9
+                                            spacing: 7
+
+                                            Text {
+                                                width: 72
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                text: Qt.formatDateTime(
+                                                    new Date(
+                                                        modelData.date
+                                                        + "T12:00:00"
+                                                    ),
+                                                    index === 0
+                                                        ? "'Today'"
+                                                        : "ddd M/d"
+                                                )
+
+                                                color: "#FFFFFF"
+                                                font.pixelSize: 12
+                                                font.bold: index === 0
+                                            }
+
+                                            Image {
+                                                width: 30
+                                                height: 30
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                source: weatherCard.iconFile(
+                                                    modelData.condition
+                                                )
+
+                                                fillMode: Image.PreserveAspectFit
+                                            }
+
+                                            Text {
+                                                width: 54
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                text: modelData.high + "°"
+                                                color: "#FFFFFF"
+                                                font.pixelSize: 14
+                                                font.bold: true
+                                            }
+
+                                            Text {
+                                                width: 48
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                text: modelData.low + "°"
+                                                color: "#BFD9E8"
+                                                font.pixelSize: 14
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                text: modelData.rain + "%"
+                                                color: "#9EE1FF"
+                                                font.pixelSize: 11
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 MouseArea {
@@ -768,7 +1325,7 @@ Rectangle {
                     radius: 12
                     color: "#0C2340"
                     border.color: "#869397"
-                    border.width: 2
+                    border.width: 1
 
                     MouseArea {
                         id: calendarHover
@@ -890,7 +1447,7 @@ Rectangle {
                 color: "#0C2340"
 
                 border.color: "#869397"
-                border.width: 2
+                border.width: 1
 
                 Column {
                     anchors.fill: parent
