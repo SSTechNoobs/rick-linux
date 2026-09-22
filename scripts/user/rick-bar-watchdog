@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+initialized=0
 screen_was_ready=0
 
 restart_bar() {
@@ -16,7 +17,22 @@ while sleep 2; do
     if grep -q '^Monitor ' <<< "$monitors" &&
        grep -q 'dpmsStatus: 1' <<< "$monitors"; then
 
-        # TV/output has just returned.
+        # First healthy startup:
+        # do not kill/restart an already working Quickshell bar.
+        if [[ "$initialized" -eq 0 ]]; then
+            initialized=1
+            screen_was_ready=1
+
+            if ! pgrep -x qs >/dev/null ||
+               ! hyprctl layers 2>/dev/null |
+                   grep -q 'namespace: quickshell'; then
+                restart_bar
+            fi
+
+            continue
+        fi
+
+        # TV/display actually went away and has now returned.
         if [[ "$screen_was_ready" -eq 0 ]]; then
             sleep 2
             restart_bar
@@ -24,17 +40,16 @@ while sleep 2; do
             continue
         fi
 
-        # Quickshell may still be running while its bar layer is gone.
-        if ! hyprctl layers 2>/dev/null |
-             grep -q 'namespace: quickshell'; then
+        # Recover if Quickshell or its layer disappears later.
+        if ! pgrep -x qs >/dev/null ||
+           ! hyprctl layers 2>/dev/null |
+               grep -q 'namespace: quickshell'; then
             restart_bar
         fi
 
-        # Quickshell actually stopped.
-        if ! pgrep -x qs >/dev/null; then
-            restart_bar
-        fi
     else
-        screen_was_ready=0
+        if [[ "$initialized" -eq 1 ]]; then
+            screen_was_ready=0
+        fi
     fi
 done
