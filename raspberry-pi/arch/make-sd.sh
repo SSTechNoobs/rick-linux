@@ -282,6 +282,12 @@ sleep 2
 # Filesystems
 # ------------------------------------------------------------
 
+# Desktop automounters may mount new partitions after partprobe.
+sudo umount "$BOOT_PART" 2>/dev/null || true
+sudo umount "$ROOT_PART" 2>/dev/null || true
+sudo udevadm settle
+sleep 1
+
 info "Creating Raspberry Pi boot filesystem..."
 
 sudo mkfs.vfat \
