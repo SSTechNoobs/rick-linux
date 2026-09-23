@@ -93,9 +93,13 @@ pacman --disable-sandbox -S \
 info "Installing Ricks Hyprland ARM64 packages..."
 
 mapfile -t PACKAGES < <(
-    sed 's/#.*//' "$PACKAGE_FILE" |
-    tr ' \\t' '\\n' |
-    sed '/^$/d'
+    awk '
+        {
+            sub(/#.*/, "")
+            for (i = 1; i <= NF; i++)
+                print $i
+        }
+    ' "$PACKAGE_FILE"
 )
 
 pacman --disable-sandbox -S \
@@ -471,10 +475,41 @@ cat > /usr/local/bin/ghostty <<'EOF_GHOSTTY'
 exec foot "$@"
 EOF_GHOSTTY
 
-cat > /usr/local/bin/google-chrome-stable <<'EOF_CHROME'
-#!/usr/bin/env bash
-exec chromium "$@"
-EOF_CHROME
+info "Installing Google Chrome ARM64..."
+
+CHROME_DEB="/tmp/google-chrome-stable-arm64.deb"
+CHROME_TMP="$(mktemp -d)"
+
+CHROME_SCHEME="https"
+CHROME_HOST="dl.google.com"
+CHROME_URL="${CHROME_SCHEME}://${CHROME_HOST}/linux/direct/google-chrome-stable_current_arm64.deb"
+
+curl -fL \
+    "$CHROME_URL" \
+    -o "$CHROME_DEB"
+
+(
+    cd "$CHROME_TMP"
+    ar x "$CHROME_DEB"
+
+    DATA_ARCHIVE="$(
+        find . -maxdepth 1 -type f -name 'data.tar.*' -print -quit
+    )"
+
+    if [[ -z "$DATA_ARCHIVE" ]]; then
+        echo "Could not find Chrome data archive." >&2
+        exit 1
+    fi
+
+    bsdtar -xpf "$DATA_ARCHIVE" -C /
+)
+
+rm -rf "$CHROME_TMP" "$CHROME_DEB"
+
+if [[ ! -x /usr/bin/google-chrome-stable ]]; then
+    echo "Google Chrome ARM64 installation failed." >&2
+    exit 1
+fi
 
 cat > /usr/local/bin/xed <<'EOF_XED'
 #!/usr/bin/env bash
@@ -483,7 +518,6 @@ EOF_XED
 
 chmod 0755 \
     /usr/local/bin/ghostty \
-    /usr/local/bin/google-chrome-stable \
     /usr/local/bin/xed
 
 # ------------------------------------------------------------
@@ -634,7 +668,7 @@ for COMMAND in \
     qs \
     hyprlauncher \
     foot \
-    chromium \
+    google-chrome-stable \
     pcmanfm \
     nmcli \
     bluetoothctl \
