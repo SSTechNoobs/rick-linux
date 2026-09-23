@@ -383,11 +383,11 @@ sed -i \
 # ------------------------------------------------------------
 
 install -m 0644 \
-    "$REPO/configs/wallpaper/wallpaper.png" \
+    "$REPO/raspberry-pi/theme/wallpaper.png" \
     "$HOME_DIR/Pictures/RicksLinuxWallpaper/wallpaper.png"
 
 cp -a \
-    "$REPO/configs/splash/RicksLinuxSplash/." \
+    "$REPO/raspberry-pi/theme/splash/." \
     "$HOME_DIR/Pictures/RicksLinuxSplash/"
 
 cp -a \

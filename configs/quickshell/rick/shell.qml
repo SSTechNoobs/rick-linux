@@ -1462,7 +1462,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: "Dallas Cowboys Edition"
+                        text: "Raspberry Pi 5 Edition"
                         color: "#869397"
                         font.pixelSize: 12
                     }
