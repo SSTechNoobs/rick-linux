@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+apt list --upgradable 2>/dev/null |
+    awk '
+        /^Listing/ { next }
+        NF { count++ }
+        END { print count + 0 }
+    '

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+echo "Ricks Hyprland Raspberry Pi Updater"
+echo "=================================="
+echo
+
+echo "Checking Raspberry Pi OS repositories..."
+sudo apt-get update || exit $?
+
+echo
+echo "Installing available updates..."
+sudo apt-get full-upgrade -y

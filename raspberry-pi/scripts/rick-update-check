@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+updates="$(
+    apt list --upgradable 2>/dev/null |
+    sed '/^Listing/d; /^$/d'
+)"
+
+count="$(
+    printf '%s\n' "$updates" |
+    sed '/^$/d' |
+    wc -l
+)"
+
+if (( count > 0 )); then
+    names="$(
+        printf '%s\n' "$updates" |
+        sed '/^$/d' |
+        awk -F/ '{print $1}' |
+        head -8 |
+        paste -sd, - |
+        sed 's/,/, /g'
+    )"
+
+    body="$count update(s) available"
+    body+=$'\nAPT: '"$count"
+
+    if [[ -n "$names" ]]; then
+        body+=$'\n\n'"$names"
+    fi
+
+    body+=$'\n\nRun the update button on the taskbar.'
+
+    notify-send \
+        -a "Ricks Hyprland" \
+        -u normal \
+        -i system-software-update \
+        "Ricks Hyprland Updates Available" \
+        "$body"
+fi

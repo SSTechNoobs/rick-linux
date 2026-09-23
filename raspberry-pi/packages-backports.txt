@@ -1,0 +1,5 @@
+hyprland
+quickshell
+hyprlauncher
+hyprpolkitagent
+xdg-desktop-portal-hyprland

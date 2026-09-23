@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+clear
+
+printf '\033[38;2;0;53;148m'
+cat <<'LOGO'
+        ★
+   RICKS HYPRLAND
+   ──────────────
+LOGO
+
+printf '\033[38;2;176;183;188m'
+printf '   Dallas Cowboys Edition\n'
+printf '   Raspberry Pi Edition\n'
+printf '\033[0m'
+
+INSTALL_DATE="Unknown"
+
+if [[ -r /etc/rick-linux-install-date ]]; then
+    RAW_DATE="$(cat /etc/rick-linux-install-date)"
+
+    FORMATTED="$(
+        date -d "$RAW_DATE" \
+            '+%B %-d, %Y at %-I:%M %p' \
+            2>/dev/null || true
+    )"
+
+    [[ -n "$FORMATTED" ]] && INSTALL_DATE="$FORMATTED"
+fi
+
+printf '\n\033[38;2;176;183;188mInstalled:\033[0m %s\n\n' \
+    "$INSTALL_DATE"
+
+fastfetch \
+    --logo none \
+    --structure Host:Kernel:Uptime:Packages:Display:WM:Terminal:CPU:GPU:Memory:Disk:LocalIp
+
+echo
+printf '\033[38;2;176;183;188mPress any key to close...\033[0m'
+read -rsn1
