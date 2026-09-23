@@ -73,7 +73,7 @@ done
 
 # Avoid generic x86-oriented hooks in the Pi initramfs.
 sed -i \
-    's/^HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems fsck)/' \
+    's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms plymouth block filesystems fsck)/' \
     /etc/mkinitcpio.conf
 
 pacman --disable-sandbox -S \
@@ -107,6 +107,26 @@ pacman --disable-sandbox -S \
     --noconfirm \
     "${PACKAGES[@]}"
 
+# ------------------------------------------------------------
+# Raspberry Pi Plymouth boot / shutdown theme
+# ------------------------------------------------------------
+
+info "Installing Ricks Hyprland Raspberry Pi boot splash..."
+
+PLYMOUTH_THEME="/usr/share/plymouth/themes/ricks-linux"
+
+install -d "$PLYMOUTH_THEME"
+
+install -m 0644     "$REPO/configs/plymouth/ricks-linux/ricks-linux.plymouth"     "$PLYMOUTH_THEME/ricks-linux.plymouth"
+
+install -m 0644     "$REPO/configs/plymouth/ricks-linux/ricks-linux.script"     "$PLYMOUTH_THEME/ricks-linux.script"
+
+install -m 0644     "$REPO/raspberry-pi/theme/splash/boot.png"     "$PLYMOUTH_THEME/boot.png"
+
+install -m 0644     "$REPO/raspberry-pi/theme/splash/shutdown.png"     "$PLYMOUTH_THEME/shutdown.png"
+
+plymouth-set-default-theme ricks-linux
+
 mkinitcpio -P
 
 # ------------------------------------------------------------
@@ -116,7 +136,7 @@ mkinitcpio -P
 info "Configuring Raspberry Pi 5 boot..."
 
 cat > /boot/cmdline.txt <<'EOF_CMDLINE'
-root=LABEL=ROOT rw rootwait rootfstype=ext4 console=tty1 fsck.repair=yes
+root=LABEL=ROOT rw rootwait rootfstype=ext4 quiet splash loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0 fsck.repair=yes
 EOF_CMDLINE
 
 cat > /etc/fstab <<'EOF_FSTAB'
