@@ -71,9 +71,12 @@ TRAN="$(
 
 ROOT_SOURCE="$(findmnt -no SOURCE /)"
 
+# Btrfs can report /dev/nvme0n1p2[/subvolume].
+ROOT_BLOCK="${ROOT_SOURCE%%[*}"
+
 ROOT_PARENT="$(
-    lsblk -no PKNAME "$ROOT_SOURCE" 2>/dev/null |
-    head -n1
+    lsblk -no PKNAME "$ROOT_BLOCK" 2>/dev/null |
+    head -n1 || true
 )"
 
 if [[ -n "$ROOT_PARENT" &&
