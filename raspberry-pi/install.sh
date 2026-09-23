@@ -232,6 +232,68 @@ text = text.replace(old_update, new_update)
 path.write_text(text)
 PY_QML
 
+
+# Raspberry Pi menu cleanup
+python3 - "$PI_QML" <<'PY_PI_MENU'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text()
+
+steam_button = """
+        Rectangle {
+            anchors.left: chatgptButton.right
+            anchors.leftMargin: 6
+            anchors.verticalCenter: parent.verticalCenter
+            width: 42
+            height: 32
+            radius: 8
+            color: "transparent"
+
+            Image {
+                anchors.centerIn: parent
+                width: 24
+                height: 24
+                source: "file:///home/rick/.config/quickshell/rick/icons/steam.png"
+                fillMode: Image.PreserveAspectFit
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-steam"])
+            }
+        }
+
+"""
+
+steam_menu = """
+                                    {
+                                        name: "Steam",
+                                        cmd: ["/home/rick/.local/bin/rick-steam"]
+                                    }
+"""
+
+text = text.replace(steam_button, "")
+text = text.replace(steam_menu, "")
+
+text = text.replace(
+    'name: "Xed",\n                                        cmd: ["xed"]',
+    'name: "Mousepad",\n                                        cmd: ["mousepad"]'
+)
+
+path.write_text(text)
+PY_PI_MENU
+
+rm -f "$TARGET_HOME/.config/quickshell/rick/icons/steam.png"
+
+# Make shared Quickshell paths work with any Pi username
+sed -i \
+    "s#/home/rick#$TARGET_HOME#g" \
+    "$PI_QML"
+
+
+
 # Hyprland Lua configuration
 install -m 0644 \
     "$REPO_ROOT/configs/hypr/hyprland.lua" \
