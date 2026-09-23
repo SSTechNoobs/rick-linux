@@ -1,0 +1,6 @@
+[Unit]
+Description=Ricks Hyprland update notification
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rick-update-check

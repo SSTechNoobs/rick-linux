@@ -115,6 +115,40 @@ sudo DEBIAN_FRONTEND=noninteractive \
     "${BACKPORT_PACKAGES[@]}"
 
 # ------------------------------------------------------------
+# Aether ARM64
+# ------------------------------------------------------------
+
+info "Installing Aether..."
+
+AETHER_URL="$(
+    curl -fsSL \
+        https://api.github.com/repos/omacom/aether/releases/latest |
+    jq -r '
+        .assets[]
+        | select(.name | test("_arm64[.]deb$"))
+        | .browser_download_url
+    ' |
+    head -n1
+)"
+
+if [[ -n "$AETHER_URL" && "$AETHER_URL" != "null" ]]; then
+    AETHER_DEB="$(mktemp --suffix=.deb)"
+
+    curl -fL \
+        "$AETHER_URL" \
+        -o "$AETHER_DEB"
+
+    if ! sudo dpkg -i "$AETHER_DEB"; then
+        sudo DEBIAN_FRONTEND=noninteractive \
+            apt-get -f install -y
+    fi
+
+    rm -f "$AETHER_DEB"
+else
+    echo "WARNING: Could not locate Aether ARM64 package."
+fi
+
+# ------------------------------------------------------------
 # System services
 # ------------------------------------------------------------
 
@@ -150,6 +184,8 @@ info "Installing Ricks Hyprland configuration..."
 mkdir -p \
     "$TARGET_HOME/.config/hypr" \
     "$TARGET_HOME/.config/quickshell" \
+    "$TARGET_HOME/.config/aether/custom/ricks-wallpaper" \
+    "$TARGET_HOME/.config/systemd/user" \
     "$TARGET_HOME/.local/bin" \
     "$TARGET_HOME/Desktop" \
     "$TARGET_HOME/Documents" \
@@ -218,6 +254,14 @@ sed -i \
 install -m 0644 \
     "$REPO_ROOT/configs/wallpaper/wallpaper.png" \
     "$TARGET_HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
+
+
+# Aether Ricks wallpaper profile
+if [[ -d "$REPO_ROOT/configs/aether/custom/ricks-wallpaper" ]]; then
+    cp -a \
+        "$REPO_ROOT/configs/aether/custom/ricks-wallpaper/." \
+        "$TARGET_HOME/.config/aether/custom/ricks-wallpaper/"
+fi
 
 # Splash artwork
 if [[ -d "$REPO_ROOT/configs/splash/RicksLinuxSplash" ]]; then
@@ -356,6 +400,23 @@ XDG_PUBLICSHARE_DIR="$HOME/"
 EOF_XDG
 
 # ------------------------------------------------------------
+# Weekly update notification
+# ------------------------------------------------------------
+
+info "Installing weekly update notification..."
+
+install -m 0644 \
+    "$SCRIPT_DIR/systemd/user/rick-update-check.service" \
+    "$TARGET_HOME/.config/systemd/user/rick-update-check.service"
+
+install -m 0644 \
+    "$SCRIPT_DIR/systemd/user/rick-update-check.timer" \
+    "$TARGET_HOME/.config/systemd/user/rick-update-check.timer"
+
+systemctl --user daemon-reload || true
+systemctl --user enable --now rick-update-check.timer || true
+
+# ------------------------------------------------------------
 # Automatic login
 # ------------------------------------------------------------
 
@@ -423,7 +484,8 @@ for COMMAND in \
     nm-applet \
     bluetoothctl \
     wpctl \
-    notify-send
+    notify-send \
+    aether
 do
     if ! command -v "$COMMAND" >/dev/null; then
         echo "WARNING: Missing command: $COMMAND"

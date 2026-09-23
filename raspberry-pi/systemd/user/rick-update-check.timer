@@ -1,0 +1,9 @@
+[Unit]
+Description=Check weekly for Ricks Hyprland updates
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
