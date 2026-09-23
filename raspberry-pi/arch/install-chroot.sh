@@ -47,11 +47,11 @@ info "Initializing Arch Linux ARM package keys..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-pacman --disable-sandbox-filesystem -Sy \
+pacman --disable-sandbox -Sy \
     --noconfirm \
     archlinuxarm-keyring
 
-pacman --disable-sandbox-filesystem -Syu --noconfirm
+pacman --disable-sandbox -Syu --noconfirm
 
 # ------------------------------------------------------------
 # Replace generic Pi kernel with Pi 5 kernel
@@ -64,8 +64,8 @@ for PACKAGE in \
     linux-rpi \
     uboot-raspberrypi
 do
-    if pacman --disable-sandbox-filesystem -Q "$PACKAGE" >/dev/null 2>&1; then
-        pacman --disable-sandbox-filesystem -Rdd \
+    if pacman --disable-sandbox -Q "$PACKAGE" >/dev/null 2>&1; then
+        pacman --disable-sandbox -Rdd \
             --noconfirm \
             "$PACKAGE"
     fi
@@ -76,7 +76,7 @@ sed -i \
     's/^HOOKS=.*/HOOKS=(base udev autodetect modconf block filesystems fsck)/' \
     /etc/mkinitcpio.conf
 
-pacman --disable-sandbox-filesystem -S \
+pacman --disable-sandbox -S \
     --needed \
     --noconfirm \
     --overwrite '/boot/*' \
@@ -98,7 +98,7 @@ mapfile -t PACKAGES < <(
     sed '/^$/d'
 )
 
-pacman --disable-sandbox-filesystem -S \
+pacman --disable-sandbox -S \
     --needed \
     --noconfirm \
     "${PACKAGES[@]}"
