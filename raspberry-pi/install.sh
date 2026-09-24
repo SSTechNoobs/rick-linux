@@ -425,18 +425,12 @@ EOF_HYPR
 fi
 
 # ------------------------------------------------------------
-# Ghostty compatibility
 # Pi uses Foot initially
 # ------------------------------------------------------------
 
 info "Creating Pi application compatibility commands..."
 
-sudo tee /usr/local/bin/ghostty >/dev/null <<'EOF_GHOSTTY'
-#!/bin/sh
-exec foot "$@"
-EOF_GHOSTTY
 
-sudo chmod 0755 /usr/local/bin/ghostty
 
 # Chrome compatibility
 sudo tee /usr/local/bin/google-chrome-stable >/dev/null <<'EOF_CHROME'

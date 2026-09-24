@@ -490,10 +490,6 @@ chmod +x \
 # Terminal / browser compatibility
 # ------------------------------------------------------------
 
-cat > /usr/local/bin/ghostty <<'EOF_GHOSTTY'
-#!/usr/bin/env bash
-exec foot "$@"
-EOF_GHOSTTY
 
 info "Installing Google Chrome ARM64..."
 
@@ -537,7 +533,7 @@ exec mousepad "$@"
 EOF_XED
 
 chmod 0755 \
-    /usr/local/bin/ghostty \
+    /usr/bin/xfce4-terminal \
     /usr/local/bin/xed
 
 # ------------------------------------------------------------
