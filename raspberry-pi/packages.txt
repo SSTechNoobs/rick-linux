@@ -61,3 +61,4 @@ chromium
 
 plymouth
 python3
+xfce4-terminal
