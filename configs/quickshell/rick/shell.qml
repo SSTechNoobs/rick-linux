@@ -367,13 +367,13 @@ ShellRoot {
                 anchors.centerIn: parent
                 width: 24
                 height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/ghostty.png"
+                source: "file:///home/rick/.config/quickshell/rick/icons/terminal.svg"
                 fillMode: Image.PreserveAspectFit
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: Quickshell.execDetached(["ghostty"])
+                onClicked: Quickshell.execDetached(["xfce4-terminal"])
             }
         }
 
@@ -1279,8 +1279,8 @@ Rectangle {
 
                     onClicked: {
                         Quickshell.execDetached([
-                            "ghostty",
-                            "-e",
+                            "xfce4-terminal",
+                            "-x",
                             "bash",
                             "-lc",
                             "yay -Syu; rc=$?; echo; if [ $rc -eq 0 ]; then echo 'Updates finished.'; else echo 'Update returned an error.'; fi; echo; echo 'This window will close in 5 seconds...'; sleep 5; exit $rc"
@@ -1506,8 +1506,8 @@ Rectangle {
                                         cmd: ["/home/rick/.local/bin/rick-chrome"]
                                     },
                                     {
-                                        name: "Ghostty Terminal",
-                                        cmd: ["ghostty"]
+                                        name: "Xfce Terminal",
+                                        cmd: ["xfce4-terminal"]
                                     },
                                     {
                                         name: "Xed",
@@ -1574,8 +1574,8 @@ Rectangle {
                                     {
                                         name: "About Ricks Linux",
                                         cmd: [
-                                            "ghostty",
-                                            "-e",
+                                            "xfce4-terminal",
+                                            "-x",
                                             "/home/rick/.local/bin/rick-about"
                                         ]
                                     },

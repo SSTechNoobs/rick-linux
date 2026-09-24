@@ -35,7 +35,7 @@ hl.monitor({
 ---------------------
 
 -- Set programs that you use
-local terminal    = "ghostty"
+local terminal    = "xfce4-terminal"
 local fileManager = "pcmanfm"
 local menu        = "hyprlauncher"
 
@@ -267,7 +267,7 @@ local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("google-chrome-stable"))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("ghostty -e /home/rick/.local/bin/rick-about"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("xfce4-terminal -x /home/rick/.local/bin/rick-about"))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("qs ipc call rickmenu toggle"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
