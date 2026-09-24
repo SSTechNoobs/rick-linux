@@ -683,7 +683,7 @@ for COMMAND in \
     start-hyprland \
     qs \
     hyprlauncher \
-    foot \
+    xfce4-terminal \
     google-chrome-stable \
     pcmanfm \
     nmcli \

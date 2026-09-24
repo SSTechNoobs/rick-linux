@@ -425,7 +425,6 @@ EOF_HYPR
 fi
 
 # ------------------------------------------------------------
-# Pi uses Foot initially
 # ------------------------------------------------------------
 
 info "Creating Pi application compatibility commands..."
@@ -534,7 +533,7 @@ for COMMAND in \
     hyprctl \
     qs \
     hyprlauncher \
-    foot \
+    xfce4-terminal \
     chromium \
     pcmanfm \
     nm-applet \

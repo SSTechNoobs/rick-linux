@@ -51,7 +51,6 @@ xdg-user-dirs
 mako
 libnotify
 pacman-contrib
-foot
 gtk3
 libcups
 libxss
