@@ -1677,23 +1677,32 @@ Rectangle {
         anchor.rect.y: -height - 18
 
         width: Math.min(960, bar.width - 80)
-        height: 730
+        height: 800
         visible: false
         color: "transparent"
 
-        property var rows: [
-            { label: "OS:", key: "os" },
+        property var hardwareRows: [
             { label: "Host:", key: "host" },
-            { label: "Kernel:", key: "kernel" },
-            { label: "Packages:", key: "packages" },
-            { label: "Display:", key: "display" },
-            { label: "Window Manager:", key: "wm" },
-            { label: "Terminal:", key: "terminal" },
             { label: "CPU:", key: "cpu" },
             { label: "GPU:", key: "gpu" },
+            { label: "Display:", key: "display" },
             { label: "Memory:", key: "memory" },
-            { label: "Disk (/):", key: "disk" },
+            { label: "Disk (/):", key: "disk" }
+        ]
+
+        property var softwareRows: [
+            { label: "OS:", key: "os" },
+            { label: "Kernel:", key: "kernel" },
+            { label: "Window Manager:", key: "wm" },
+            { label: "Terminal:", key: "terminal" },
+            { label: "Packages:", key: "packages" },
             { label: "Local IP:", key: "ip" }
+        ]
+
+        property var ageRows: [
+            { label: "OS Age:", key: "daysInstalled" },
+            { label: "Uptime:", key: "uptime" },
+            { label: "Installed:", key: "installed" }
         ]
 
         onVisibleChanged: {
@@ -1786,7 +1795,7 @@ Rectangle {
             Column {
                 anchors.fill: parent
                 anchors.margins: 28
-                spacing: 8
+                spacing: 5
 
                 Row {
                     spacing: 0
@@ -1794,21 +1803,21 @@ Rectangle {
                     Text {
                         text: "Ricks Hypr"
                         color: "#EAF7FF"
-                        font.pixelSize: 43
+                        font.pixelSize: 40
                         font.bold: true
                     }
 
                     Text {
                         text: "land"
                         color: "#FF2AA1"
-                        font.pixelSize: 43
+                        font.pixelSize: 40
                         font.bold: true
                     }
                 }
 
                 Rectangle {
                     width: 500
-                    height: 50
+                    height: 45
                     radius: 12
                     color: "#260D1B2C"
                     border.color: "#35DFFF"
@@ -1821,7 +1830,7 @@ Rectangle {
                         Text {
                             text: "RASPBERRY PI"
                             color: "#F5FAFF"
-                            font.pixelSize: 24
+                            font.pixelSize: 22
                             font.bold: true
                             font.letterSpacing: 4
                         }
@@ -1829,7 +1838,7 @@ Rectangle {
                         Text {
                             text: "5"
                             color: "#FF2AA1"
-                            font.pixelSize: 26
+                            font.pixelSize: 24
                             font.bold: true
                         }
                     }
@@ -1838,112 +1847,8 @@ Rectangle {
                 Text {
                     text: "A R C H L I N U X   A R M 6 4"
                     color: "#DDEAF3"
-                    font.pixelSize: 15
+                    font.pixelSize: 14
                     font.bold: true
-                }
-
-                Row {
-                    id: aboutTopSummary
-                    width: parent.width
-                    height: 62
-                    spacing: 10
-
-                    Rectangle {
-                        width: (aboutTopSummary.width - 20) / 3
-                        height: 62
-                        radius: 9
-                        color: "#CC08131F"
-                        border.color: "#35DFFF"
-                        border.width: 1
-
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "INSTALL DATE"
-                                color: "#35E7FF"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.aboutData.installDate || "Loading..."
-                                color: "#F8FCFF"
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: (aboutTopSummary.width - 20) / 3
-                        height: 62
-                        radius: 9
-                        color: "#CC08131F"
-                        border.color: "#FF2AA1"
-                        border.width: 1
-
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "UPTIME"
-                                color: "#FF69BE"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.aboutData.uptime || "Loading..."
-                                color: "#F8FCFF"
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: (aboutTopSummary.width - 20) / 3
-                        height: 62
-                        radius: 9
-                        color: "#CC08131F"
-                        border.color: "#35DFFF"
-                        border.width: 1
-
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "DAYS INSTALLED"
-                                color: "#35E7FF"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.aboutData.daysInstalled || "Loading..."
-                                color: "#F8FCFF"
-                                font.pixelSize: 14
-                                font.bold: true
-                            }
-                        }
-                    }
-                }
-
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    color: "#35DFFF"
-                    opacity: 0.65
                 }
 
                 Item {
@@ -1951,12 +1856,33 @@ Rectangle {
                     height: 4
                 }
 
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        text: "HARDWARE"
+                        color: "#35E7FF"
+                        font.pixelSize: 13
+                        font.bold: true
+                        font.family: "monospace"
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 105
+                        height: 1
+                        color: "#35DFFF"
+                        opacity: 0.7
+                    }
+                }
+
                 Column {
                     width: parent.width
-                    spacing: 3
+                    spacing: 2
 
                     Repeater {
-                        model: aboutPopup.rows
+                        model: aboutPopup.hardwareRows
 
                         delegate: Rectangle {
                             required property var modelData
@@ -1965,7 +1891,6 @@ Rectangle {
                             width: parent.width
                             height: 28
                             radius: 5
-
                             color: index % 2 === 0
                                 ? "#CC08131F"
                                 : "#A50C1525"
@@ -1995,7 +1920,7 @@ Rectangle {
                                     width: 205
                                     text: modelData.label
                                     color: "#35E7FF"
-                                    font.pixelSize: 16
+                                    font.pixelSize: 15
                                     font.bold: true
                                     font.family: "monospace"
                                 }
@@ -2005,7 +1930,181 @@ Rectangle {
                                     width: parent.width - 250
                                     text: root.aboutData[modelData.key] || "Loading..."
                                     color: "#F4F8FC"
-                                    font.pixelSize: 16
+                                    font.pixelSize: 15
+                                    font.family: "monospace"
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    width: 1
+                    height: 3
+                }
+
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        text: "SOFTWARE"
+                        color: "#FF69BE"
+                        font.pixelSize: 13
+                        font.bold: true
+                        font.family: "monospace"
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 105
+                        height: 1
+                        color: "#FF2AA1"
+                        opacity: 0.7
+                    }
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 2
+
+                    Repeater {
+                        model: aboutPopup.softwareRows
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            required property int index
+
+                            width: parent.width
+                            height: 28
+                            radius: 5
+                            color: index % 2 === 0
+                                ? "#CC08131F"
+                                : "#A50C1525"
+                            border.color: index % 2 === 0
+                                ? "#22FF2AA1"
+                                : "#2235E7FF"
+                            border.width: 1
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                spacing: 10
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16
+                                    text: "◆"
+                                    color: index % 3 === 0
+                                        ? "#FF2AA1"
+                                        : "#35DFFF"
+                                    font.pixelSize: 10
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 205
+                                    text: modelData.label
+                                    color: "#35E7FF"
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    font.family: "monospace"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: parent.width - 250
+                                    text: root.aboutData[modelData.key] || "Loading..."
+                                    color: "#F4F8FC"
+                                    font.pixelSize: 15
+                                    font.family: "monospace"
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    width: 1
+                    height: 3
+                }
+
+                Row {
+                    width: parent.width
+                    spacing: 10
+
+                    Text {
+                        text: "AGE / UPTIME / INSTALL"
+                        color: "#35E7FF"
+                        font.pixelSize: 13
+                        font.bold: true
+                        font.family: "monospace"
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 205
+                        height: 1
+                        color: "#35DFFF"
+                        opacity: 0.7
+                    }
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 2
+
+                    Repeater {
+                        model: aboutPopup.ageRows
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            required property int index
+
+                            width: parent.width
+                            height: 28
+                            radius: 5
+                            color: "#A50C1525"
+                            border.color: index === 1
+                                ? "#22FF2AA1"
+                                : "#2235E7FF"
+                            border.width: 1
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                spacing: 10
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16
+                                    text: "◆"
+                                    color: index === 1
+                                        ? "#FF2AA1"
+                                        : "#35DFFF"
+                                    font.pixelSize: 10
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 205
+                                    text: modelData.label
+                                    color: "#35E7FF"
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                    font.family: "monospace"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: parent.width - 250
+                                    text: root.aboutData[modelData.key] || "Loading..."
+                                    color: "#F4F8FC"
+                                    font.pixelSize: 15
                                     font.family: "monospace"
                                     elide: Text.ElideRight
                                 }
@@ -2029,7 +2128,7 @@ Rectangle {
                 Text {
                     text: "Ricks Hyprland  •  Raspberry Pi 5  •  Archlinux ARM64"
                     color: "#91AFC2"
-                    font.pixelSize: 12
+                    font.pixelSize: 11
                 }
             }
         }
