@@ -1,3 +1,14 @@
+
+def get_os_pretty_name():
+    try:
+        for line in Path("/etc/os-release").read_text().splitlines():
+            if line.startswith("PRETTY_NAME="):
+                return line.split("=", 1)[1].strip().strip('"')
+    except Exception:
+        pass
+    return "Unknown"
+
+
 #!/usr/bin/env python3
 
 import datetime
@@ -228,6 +239,7 @@ if date_file.exists():
 
 print(json.dumps({
     "installed": installed,
+        "os": get_os_pretty_name(),
     "installDate": install_date_short,
     "daysInstalled": days_installed,
     "host": host,
