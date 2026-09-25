@@ -1677,11 +1677,12 @@ Rectangle {
         anchor.rect.y: -height - 18
 
         width: Math.min(960, bar.width - 80)
-        height: 700
+        height: 730
         visible: false
         color: "transparent"
 
         property var rows: [
+            { label: "OS:", key: "os" },
             { label: "Host:", key: "host" },
             { label: "Kernel:", key: "kernel" },
             { label: "Packages:", key: "packages" },

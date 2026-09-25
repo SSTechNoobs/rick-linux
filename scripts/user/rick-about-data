@@ -1,14 +1,3 @@
-
-def get_os_pretty_name():
-    try:
-        for line in Path("/etc/os-release").read_text().splitlines():
-            if line.startswith("PRETTY_NAME="):
-                return line.split("=", 1)[1].strip().strip('"')
-    except Exception:
-        pass
-    return "Unknown"
-
-
 #!/usr/bin/env python3
 
 import datetime
@@ -18,6 +7,37 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+
+
+def get_os_pretty_name():
+    # Prefer Ricks Hyprland's own release information.
+    release_file = Path("/etc/rick-linux-release")
+
+    if release_file.exists():
+        try:
+            values = {}
+
+            for line in release_file.read_text().splitlines():
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                    values[key] = value.strip().strip('"')
+
+            name = values.get("NAME", "Ricks Hyprland")
+            version = values.get("VERSION", "")
+
+            return f"{name} {version}".strip()
+        except Exception:
+            pass
+
+    # Fallback to the underlying distro name.
+    try:
+        for line in Path("/etc/os-release").read_text().splitlines():
+            if line.startswith("PRETTY_NAME="):
+                return line.split("=", 1)[1].strip().strip('"')
+    except Exception:
+        pass
+
+    return "Unknown"
 
 
 def run(args):
@@ -239,7 +259,7 @@ if date_file.exists():
 
 print(json.dumps({
     "installed": installed,
-        "os": get_os_pretty_name(),
+    "os": get_os_pretty_name(),
     "installDate": install_date_short,
     "daysInstalled": days_installed,
     "host": host,
