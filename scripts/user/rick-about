@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec qs ipc call rickabout toggle
+exec qs -c rick ipc call rickabout toggle

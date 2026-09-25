@@ -200,8 +200,36 @@ if iface_match and ip_match:
     local_ip = f"{iface}: {address}{prefix}"
 
 
+# About summary
+install_date_short = (
+    installed.split(" at ", 1)[0]
+    if installed != "Unknown"
+    else "Unknown"
+)
+
+days_installed = "Unknown"
+
+if date_file.exists():
+    try:
+        raw = date_file.read_text().strip()
+        install_dt = datetime.datetime.fromisoformat(
+            raw.replace("Z", "+00:00")
+        )
+
+        now = datetime.datetime.now(install_dt.tzinfo)
+        days = max(0, (now - install_dt).days)
+
+        days_installed = (
+            "1 day" if days == 1 else f"{days} days"
+        )
+    except Exception:
+        pass
+
+
 print(json.dumps({
     "installed": installed,
+    "installDate": install_date_short,
+    "daysInstalled": days_installed,
     "host": host,
     "kernel": kernel,
     "uptime": uptime,

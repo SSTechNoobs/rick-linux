@@ -1699,63 +1699,22 @@ Rectangle {
         anchor.rect.y: -height - 18
 
         width: Math.min(960, bar.width - 80)
-        height: 610
+        height: 700
         visible: false
         color: "transparent"
 
         property var rows: [
-            {
-                label: "Installed:",
-                value: root.aboutData.installed || "Loading..."
-            },
-            {
-                label: "Host:",
-                value: root.aboutData.host || "Loading..."
-            },
-            {
-                label: "Kernel:",
-                value: root.aboutData.kernel || "Loading..."
-            },
-            {
-                label: "Uptime:",
-                value: root.aboutData.uptime || "Loading..."
-            },
-            {
-                label: "Packages:",
-                value: root.aboutData.packages || "Loading..."
-            },
-            {
-                label: "Display:",
-                value: root.aboutData.display || "Loading..."
-            },
-            {
-                label: "Window Manager:",
-                value: root.aboutData.wm || "Loading..."
-            },
-            {
-                label: "Terminal:",
-                value: root.aboutData.terminal || "Loading..."
-            },
-            {
-                label: "CPU:",
-                value: root.aboutData.cpu || "Loading..."
-            },
-            {
-                label: "GPU:",
-                value: root.aboutData.gpu || "Loading..."
-            },
-            {
-                label: "Memory:",
-                value: root.aboutData.memory || "Loading..."
-            },
-            {
-                label: "Disk (/):",
-                value: root.aboutData.disk || "Loading..."
-            },
-            {
-                label: "Local IP:",
-                value: root.aboutData.ip || "Loading..."
-            }
+            { label: "Host:", key: "host" },
+            { label: "Kernel:", key: "kernel" },
+            { label: "Packages:", key: "packages" },
+            { label: "Display:", key: "display" },
+            { label: "Window Manager:", key: "wm" },
+            { label: "Terminal:", key: "terminal" },
+            { label: "CPU:", key: "cpu" },
+            { label: "GPU:", key: "gpu" },
+            { label: "Memory:", key: "memory" },
+            { label: "Disk (/):", key: "disk" },
+            { label: "Local IP:", key: "ip" }
         ]
 
         onVisibleChanged: {
@@ -1772,7 +1731,7 @@ Rectangle {
         Rectangle {
             anchors.fill: parent
             radius: 20
-            color: "#F20A1020"
+            color: "#FF07111C"
             border.color: "#45E7FF"
             border.width: 2
 
@@ -1895,6 +1854,103 @@ Rectangle {
                     font.bold: true
                 }
 
+                Row {
+                    id: aboutTopSummary
+                    width: parent.width
+                    height: 62
+                    spacing: 10
+
+                    Rectangle {
+                        width: (aboutTopSummary.width - 20) / 3
+                        height: 62
+                        radius: 9
+                        color: "#CC08131F"
+                        border.color: "#35DFFF"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "INSTALL DATE"
+                                color: "#35E7FF"
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: root.aboutData.installDate || "Loading..."
+                                color: "#F8FCFF"
+                                font.pixelSize: 14
+                                font.bold: true
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: (aboutTopSummary.width - 20) / 3
+                        height: 62
+                        radius: 9
+                        color: "#CC08131F"
+                        border.color: "#FF2AA1"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "UPTIME"
+                                color: "#FF69BE"
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: root.aboutData.uptime || "Loading..."
+                                color: "#F8FCFF"
+                                font.pixelSize: 14
+                                font.bold: true
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: (aboutTopSummary.width - 20) / 3
+                        height: 62
+                        radius: 9
+                        color: "#CC08131F"
+                        border.color: "#35DFFF"
+                        border.width: 1
+
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "DAYS INSTALLED"
+                                color: "#35E7FF"
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: root.aboutData.daysInstalled || "Loading..."
+                                color: "#F8FCFF"
+                                font.pixelSize: 14
+                                font.bold: true
+                            }
+                        }
+                    }
+                }
+
                 Rectangle {
                     width: parent.width
                     height: 1
@@ -1916,14 +1972,19 @@ Rectangle {
 
                         delegate: Rectangle {
                             required property var modelData
+                            required property int index
 
                             width: parent.width
                             height: 28
                             radius: 5
 
                             color: index % 2 === 0
-                                ? "#221E3550"
-                                : "transparent"
+                                ? "#CC08131F"
+                                : "#A50C1525"
+                            border.color: index % 2 === 0
+                                ? "#2235E7FF"
+                                : "#22FF2AA1"
+                            border.width: 1
 
                             Row {
                                 anchors.fill: parent
@@ -1954,7 +2015,7 @@ Rectangle {
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 250
-                                    text: modelData.value
+                                    text: root.aboutData[modelData.key] || "Loading..."
                                     color: "#F4F8FC"
                                     font.pixelSize: 16
                                     font.family: "monospace"
