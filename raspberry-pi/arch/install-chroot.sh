@@ -581,6 +581,67 @@ else
     echo "WARNING: Aether ARM64 download was not found."
 fi
 
+
+# ------------------------------------------------------------
+# Secure browser remote desktop
+# ------------------------------------------------------------
+
+info "Installing Ricks Hyprland browser remote desktop..."
+
+install -d -m 0700 \
+    "$HOME_DIR/.config/rick-remote"
+
+install -d -m 0755 \
+    "$HOME_DIR/.local/share" \
+    "$HOME_DIR/.local/lib/rick-remote"
+
+rm -rf \
+    "$HOME_DIR/.local/share/novnc"
+
+git clone \
+    --depth 1 \
+    --branch v1.7.0 \
+    https://github.com/novnc/noVNC.git \
+    "$HOME_DIR/.local/share/novnc"
+
+git clone \
+    --depth 1 \
+    https://github.com/novnc/websockify.git \
+    "$HOME_DIR/.local/share/novnc/utils/websockify"
+
+# Ricks Hyprland uses a software pointer dot because WayVNC does
+# not provide a visible cursor image to noVNC.
+sed -i \
+    "s/UI.initSetting('show_dot', false);/UI.initSetting('show_dot', true);/" \
+    "$HOME_DIR/.local/share/novnc/app/ui.js"
+
+printf '%s' "$RICK_REMOTE_AUTH_B64" |
+    base64 -d \
+    > "$HOME_DIR/.config/rick-remote/auth.json"
+
+chmod 0600 \
+    "$HOME_DIR/.config/rick-remote/auth.json"
+
+install -m 0644 \
+    "$REPO/raspberry-pi/remote/rick_web_auth.py" \
+    "$HOME_DIR/.local/lib/rick-remote/rick_web_auth.py"
+
+install -m 0755 \
+    "$REPO/raspberry-pi/remote/rick-remote-prepare" \
+    "$HOME_DIR/.local/bin/rick-remote-prepare"
+
+install -m 0644 \
+    "$REPO/raspberry-pi/systemd/user/rick-wayvnc.service" \
+    "$HOME_DIR/.config/systemd/user/rick-wayvnc.service"
+
+install -m 0644 \
+    "$REPO/raspberry-pi/systemd/user/rick-novnc.service" \
+    "$HOME_DIR/.config/systemd/user/rick-novnc.service"
+
+rm -rf \
+    "$HOME_DIR/.local/share/novnc/.git" \
+    "$HOME_DIR/.local/share/novnc/utils/websockify/.git"
+
 # ------------------------------------------------------------
 # Session startup
 # ------------------------------------------------------------
@@ -604,6 +665,12 @@ systemctl --user start hyprpolkitagent.service \
 pgrep -x nm-applet >/dev/null 2>&1 || \
     setsid -f nm-applet --indicator \
     >/dev/null 2>&1
+
+
+systemctl --user start \
+    rick-wayvnc.service \
+    rick-novnc.service \
+    >/dev/null 2>&1 || true
 
 "$HOME/.local/bin/rick-wallpaper-apply"
 EOF_SESSION

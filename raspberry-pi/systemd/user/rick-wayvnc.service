@@ -1,0 +1,8 @@
+[Unit]
+Description=Ricks Hyprland WayVNC
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/wayvnc 127.0.0.1:5900
+Restart=on-failure
+RestartSec=2

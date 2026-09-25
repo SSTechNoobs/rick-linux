@@ -60,3 +60,5 @@ ttf-liberation
 xdg-utils
 plymouth
 xfce4-terminal
+pipewire-jack
+wayvnc

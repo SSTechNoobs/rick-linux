@@ -1,0 +1,12 @@
+[Unit]
+Description=Ricks Hyprland Secure noVNC
+After=rick-wayvnc.service
+Requires=rick-wayvnc.service
+
+[Service]
+Type=simple
+Environment=PYTHONPATH=/home/rick/.local/lib/rick-remote
+ExecStartPre=/home/rick/.local/bin/rick-remote-prepare
+ExecStart=/home/rick/.local/share/novnc/utils/novnc_proxy --listen 0.0.0.0:6080 --vnc 127.0.0.1:5900 --cert /home/rick/.config/rick-remote/novnc-cert.pem --key /home/rick/.config/rick-remote/novnc-key.pem --ssl-only --file-only --web-auth --auth-plugin rick_web_auth.FileBasicAuth --auth-source /home/rick/.config/rick-remote/auth.json --heartbeat 30
+Restart=on-failure
+RestartSec=2
