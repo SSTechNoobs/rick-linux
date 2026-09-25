@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+
+import datetime
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+def run(args):
+    try:
+        return subprocess.check_output(
+            args,
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        return ""
+
+
+def gib(value):
+    return value / (1024 ** 3)
+
+
+# Install date
+installed = "Unknown"
+date_file = Path("/etc/rick-linux-install-date")
+
+if date_file.exists():
+    try:
+        raw = date_file.read_text().strip()
+        dt = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        installed = dt.strftime("%B %-d, %Y at %-I:%M %p")
+    except Exception:
+        pass
+
+
+# Host
+host = "Raspberry Pi 5"
+model_file = Path("/proc/device-tree/model")
+
+if model_file.exists():
+    try:
+        host = model_file.read_bytes().replace(b"\0", b"").decode().strip()
+    except Exception:
+        pass
+
+
+# Kernel
+kernel = run(["uname", "-r"]) or "Unknown"
+
+
+# Uptime
+uptime = "Unknown"
+
+try:
+    seconds = float(Path("/proc/uptime").read_text().split()[0])
+    minutes = int(seconds // 60)
+
+    if minutes >= 60:
+        uptime = f"{minutes // 60} hr {minutes % 60} min"
+    else:
+        uptime = f"{minutes} mins"
+except Exception:
+    pass
+
+
+# Packages
+packages = run(["pacman", "-Qq"])
+package_count = len(packages.splitlines()) if packages else 0
+
+
+# Display
+display = "Unknown"
+
+try:
+    monitors = json.loads(run(["hyprctl", "monitors", "-j"]) or "[]")
+
+    if monitors:
+        mon = monitors[0]
+        width = mon.get("width", "?")
+        height = mon.get("height", "?")
+        hz = float(mon.get("refreshRate", 0))
+        display = f"{width}x{height}, {hz:.0f} Hz"
+except Exception:
+    pass
+
+
+# Hyprland
+wm = "Hyprland (Wayland)"
+version_text = run(["hyprctl", "version"])
+match = re.search(r"Hyprland\s+([0-9][^\s]*)", version_text)
+
+if match:
+    wm = f"Hyprland {match.group(1)} (Wayland)"
+
+
+# Terminal
+terminal = run(["xfce4-terminal", "--version"]).splitlines()
+
+if terminal:
+    terminal = terminal[0]
+else:
+    terminal = "xfce4-terminal"
+
+
+# CPU
+cores = os.cpu_count() or 4
+ghz = 2.40
+
+freq_file = Path(
+    "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq"
+)
+
+if freq_file.exists():
+    try:
+        ghz = float(freq_file.read_text().strip()) / 1_000_000
+    except Exception:
+        pass
+
+cpu = f"BCM2712 ({cores}) @ {ghz:.2f} GHz"
+
+
+# GPU
+gpu = "Broadcom bcm2712-vc6 [Integrated]"
+
+
+# Memory
+memory = "Unknown"
+
+try:
+    mem = {}
+
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        if ":" in line:
+            key, value = line.split(":", 1)
+            mem[key] = int(value.strip().split()[0]) * 1024
+
+    total = mem["MemTotal"]
+    available = mem["MemAvailable"]
+    used = total - available
+    percent = round((used / total) * 100)
+
+    memory = (
+        f"{gib(used):.2f} GiB / "
+        f"{gib(total):.2f} GiB ({percent}%)"
+    )
+except Exception:
+    pass
+
+
+# Disk
+disk = "Unknown"
+
+try:
+    usage = shutil.disk_usage("/")
+    used_percent = round((usage.used / usage.total) * 100)
+    fs = run(["findmnt", "-n", "-o", "FSTYPE", "/"]) or "unknown"
+
+    disk = (
+        f"{gib(usage.used):.2f} GiB / "
+        f"{gib(usage.total):.2f} GiB "
+        f"({used_percent}%) - {fs}"
+    )
+except Exception:
+    pass
+
+
+# Local IP
+local_ip = "Unknown"
+
+route = run(["ip", "route", "get", "1.1.1.1"])
+
+iface_match = re.search(r"\bdev\s+(\S+)", route)
+ip_match = re.search(r"\bsrc\s+(\S+)", route)
+
+if iface_match and ip_match:
+    iface = iface_match.group(1)
+    address = ip_match.group(1)
+    prefix = ""
+
+    try:
+        info = json.loads(
+            run(["ip", "-j", "address", "show", "dev", iface]) or "[]"
+        )
+
+        for entry in info:
+            for addr in entry.get("addr_info", []):
+                if (
+                    addr.get("family") == "inet"
+                    and addr.get("local") == address
+                ):
+                    prefix = f"/{addr.get('prefixlen')}"
+                    break
+    except Exception:
+        pass
+
+    local_ip = f"{iface}: {address}{prefix}"
+
+
+print(json.dumps({
+    "installed": installed,
+    "host": host,
+    "kernel": kernel,
+    "uptime": uptime,
+    "packages": f"{package_count} (pacman)",
+    "display": display,
+    "wm": wm,
+    "terminal": terminal,
+    "cpu": cpu,
+    "gpu": gpu,
+    "memory": memory,
+    "disk": disk,
+    "ip": local_ip
+}))

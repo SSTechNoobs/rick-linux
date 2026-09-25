@@ -42,16 +42,58 @@ ShellRoot {
         }
     }
 
+    HyprlandFocusGrab {
+        id: aboutGrab
+        windows: [aboutPopup]
+
+        onCleared: {
+            aboutPopup.visible = false
+        }
+    }
+
+    IpcHandler {
+        target: "rickabout"
+
+        function toggle(): void {
+            aboutPopup.visible = !aboutPopup.visible
+        }
+
+        function open(): void {
+            aboutPopup.visible = true
+        }
+
+        function close(): void {
+            aboutPopup.visible = false
+        }
+    }
+
     property string netStatus: "Checking..."
     property string btStatus: "..."
     property string volumeStatus: "..."
     property string weatherStatus: "Weather..."
     property string forecastStatus: "Loading forecast..."
     property var weatherData: ({})
+    property var aboutData: ({})
 
     SystemClock {
         id: clock
         precision: SystemClock.Seconds
+    }
+
+    Process {
+        id: aboutProc
+        command: ["/home/rick/.local/bin/rick-about-data"]
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.aboutData = JSON.parse(this.text)
+                } catch (e) {
+                    console.log("Could not parse About data: " + e)
+                }
+            }
+        }
     }
 
     Process {
@@ -1574,8 +1616,6 @@ Rectangle {
                                     {
                                         name: "About Ricks Linux",
                                         cmd: [
-                                            "xfce4-terminal",
-                                            "-x",
                                             "/home/rick/.local/bin/rick-about"
                                         ]
                                     },
@@ -1650,4 +1690,300 @@ Rectangle {
         }
 
 }
+
+    PopupWindow {
+        id: aboutPopup
+
+        anchor.window: bar
+        anchor.rect.x: Math.max(20, (bar.width - width) / 2)
+        anchor.rect.y: -height - 18
+
+        width: Math.min(960, bar.width - 80)
+        height: 610
+        visible: false
+        color: "transparent"
+
+        property var rows: [
+            {
+                label: "Installed:",
+                value: root.aboutData.installed || "Loading..."
+            },
+            {
+                label: "Host:",
+                value: root.aboutData.host || "Loading..."
+            },
+            {
+                label: "Kernel:",
+                value: root.aboutData.kernel || "Loading..."
+            },
+            {
+                label: "Uptime:",
+                value: root.aboutData.uptime || "Loading..."
+            },
+            {
+                label: "Packages:",
+                value: root.aboutData.packages || "Loading..."
+            },
+            {
+                label: "Display:",
+                value: root.aboutData.display || "Loading..."
+            },
+            {
+                label: "Window Manager:",
+                value: root.aboutData.wm || "Loading..."
+            },
+            {
+                label: "Terminal:",
+                value: root.aboutData.terminal || "Loading..."
+            },
+            {
+                label: "CPU:",
+                value: root.aboutData.cpu || "Loading..."
+            },
+            {
+                label: "GPU:",
+                value: root.aboutData.gpu || "Loading..."
+            },
+            {
+                label: "Memory:",
+                value: root.aboutData.memory || "Loading..."
+            },
+            {
+                label: "Disk (/):",
+                value: root.aboutData.disk || "Loading..."
+            },
+            {
+                label: "Local IP:",
+                value: root.aboutData.ip || "Loading..."
+            }
+        ]
+
+        onVisibleChanged: {
+            if (visible) {
+                aboutGrab.active = true
+
+                if (!aboutProc.running)
+                    aboutProc.running = true
+            } else {
+                aboutGrab.active = false
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 20
+            color: "#F20A1020"
+            border.color: "#45E7FF"
+            border.width: 2
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 7
+                radius: 15
+                color: "transparent"
+                border.color: "#55FF2AA1"
+                border.width: 1
+                opacity: 0.7
+            }
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: parent.width * 0.43
+                radius: 18
+                opacity: 0.18
+
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: "#00172A"
+                    }
+
+                    GradientStop {
+                        position: 1.0
+                        color: "#FF167D"
+                    }
+                }
+            }
+
+            Image {
+                anchors.right: parent.right
+                anchors.rightMargin: 50
+                anchors.top: parent.top
+                anchors.topMargin: 45
+                width: 145
+                height: 145
+                opacity: 0.22
+                source: "file:///home/rick/.config/quickshell/rick/icons/arch-bar.svg"
+                fillMode: Image.PreserveAspectFit
+            }
+
+            Text {
+                anchors.right: parent.right
+                anchors.rightMargin: 22
+                anchors.top: parent.top
+                anchors.topMargin: 13
+                text: "×"
+                color: "#FF4AB5"
+                font.pixelSize: 30
+                font.bold: true
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -10
+                    onClicked: aboutPopup.visible = false
+                }
+            }
+
+            Column {
+                anchors.fill: parent
+                anchors.margins: 28
+                spacing: 8
+
+                Row {
+                    spacing: 0
+
+                    Text {
+                        text: "Ricks Hypr"
+                        color: "#EAF7FF"
+                        font.pixelSize: 43
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: "land"
+                        color: "#FF2AA1"
+                        font.pixelSize: 43
+                        font.bold: true
+                    }
+                }
+
+                Rectangle {
+                    width: 500
+                    height: 50
+                    radius: 12
+                    color: "#260D1B2C"
+                    border.color: "#35DFFF"
+                    border.width: 2
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 9
+
+                        Text {
+                            text: "RASPBERRY PI"
+                            color: "#F5FAFF"
+                            font.pixelSize: 24
+                            font.bold: true
+                            font.letterSpacing: 4
+                        }
+
+                        Text {
+                            text: "5"
+                            color: "#FF2AA1"
+                            font.pixelSize: 26
+                            font.bold: true
+                        }
+                    }
+                }
+
+                Text {
+                    text: "A R C H L I N U X   A R M 6 4"
+                    color: "#DDEAF3"
+                    font.pixelSize: 15
+                    font.bold: true
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#35DFFF"
+                    opacity: 0.65
+                }
+
+                Item {
+                    width: 1
+                    height: 4
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 3
+
+                    Repeater {
+                        model: aboutPopup.rows
+
+                        delegate: Rectangle {
+                            required property var modelData
+
+                            width: parent.width
+                            height: 28
+                            radius: 5
+
+                            color: index % 2 === 0
+                                ? "#221E3550"
+                                : "transparent"
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                spacing: 10
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16
+                                    text: "◆"
+                                    color: index % 3 === 0
+                                        ? "#FF2AA1"
+                                        : "#35DFFF"
+                                    font.pixelSize: 10
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 205
+                                    text: modelData.label
+                                    color: "#35E7FF"
+                                    font.pixelSize: 16
+                                    font.bold: true
+                                    font.family: "monospace"
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: parent.width - 250
+                                    text: modelData.value
+                                    color: "#F4F8FC"
+                                    font.pixelSize: 16
+                                    font.family: "monospace"
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    width: 1
+                    height: 3
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#FF2AA1"
+                    opacity: 0.6
+                }
+
+                Text {
+                    text: "Ricks Hyprland  •  Raspberry Pi 5  •  Archlinux ARM64"
+                    color: "#91AFC2"
+                    font.pixelSize: 12
+                }
+            }
+        }
+    }
+
 }
