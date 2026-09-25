@@ -44,6 +44,13 @@ EOF_HOSTS
 
 info "Initializing Arch Linux ARM package keys..."
 
+# Prefer a direct Arch Linux ARM mirror instead of the GeoIP redirector.
+cat > /etc/pacman.d/mirrorlist <<'EOF_MIRRORS'
+Server = https://ca.us.mirror.archlinuxarm.org/$arch/$repo
+Server = https://fl.us.mirror.archlinuxarm.org/$arch/$repo
+Server = https://nj.us.mirror.archlinuxarm.org/$arch/$repo
+EOF_MIRRORS
+
 pacman-key --init
 pacman-key --populate archlinuxarm
 
