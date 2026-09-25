@@ -1735,6 +1735,15 @@ Rectangle {
             border.color: "#45E7FF"
             border.width: 2
 
+            Image {
+                anchors.fill: parent
+                anchors.margins: 3
+                source: "file:///home/rick/Pictures/RicksLinuxWallpaper/wallpaper.png"
+                fillMode: Image.PreserveAspectCrop
+                opacity: 0.16
+                smooth: true
+            }
+
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 7
