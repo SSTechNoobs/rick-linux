@@ -415,7 +415,7 @@ ShellRoot {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: Quickshell.execDetached(["xfce4-terminal"])
+                onClicked: Quickshell.execDetached(["xfce4-terminal", "--hide-scrollbar"])
             }
         }
 
@@ -1300,6 +1300,7 @@ Rectangle {
                     onClicked: {
                         Quickshell.execDetached([
                             "xfce4-terminal",
+                            "--hide-scrollbar",
                             "-x",
                             "bash",
                             "-lc",
@@ -1527,7 +1528,7 @@ Rectangle {
                                     },
                                     {
                                         name: "Xfce Terminal",
-                                        cmd: ["xfce4-terminal"]
+                                        cmd: ["xfce4-terminal", "--hide-scrollbar"]
                                     },
                                     {
                                         name: "Xed",
@@ -1797,54 +1798,69 @@ Rectangle {
                 anchors.margins: 28
                 spacing: 5
 
-                Row {
-                    spacing: 0
-
-                    Text {
-                        text: "Ricks Hypr"
-                        color: "#EAF7FF"
-                        font.pixelSize: 40
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: "land"
-                        color: "#FF2AA1"
-                        font.pixelSize: 40
-                        font.bold: true
-                    }
-                }
-
-                Rectangle {
-                    width: 500
-                    height: 45
-                    radius: 12
-                    color: "#260D1B2C"
-                    border.color: "#35DFFF"
-                    border.width: 2
+                Item {
+                    width: parent.width
+                    height: titleRow.implicitHeight
 
                     Row {
-                        anchors.centerIn: parent
-                        spacing: 9
+                        id: titleRow
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 0
 
                         Text {
-                            text: "RASPBERRY PI"
-                            color: "#F5FAFF"
-                            font.pixelSize: 22
+                            text: "Ricks Hypr"
+                            color: "#EAF7FF"
+                            font.pixelSize: 40
                             font.bold: true
-                            font.letterSpacing: 4
                         }
 
                         Text {
-                            text: "5"
+                            text: "land"
                             color: "#FF2AA1"
-                            font.pixelSize: 24
+                            font.pixelSize: 40
                             font.bold: true
+                        }
+                    }
+                }
+
+                Item {
+                    width: parent.width
+                    height: 45
+
+                    Rectangle {
+                        width: 500
+                        height: 45
+                        radius: 12
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        color: "#260D1B2C"
+                        border.color: "#35DFFF"
+                        border.width: 2
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 9
+
+                            Text {
+                                text: "RASPBERRY PI"
+                                color: "#F5FAFF"
+                                font.pixelSize: 22
+                                font.bold: true
+                                font.letterSpacing: 4
+                            }
+
+                            Text {
+                                text: "5"
+                                color: "#FF2AA1"
+                                font.pixelSize: 24
+                                font.bold: true
+                            }
                         }
                     }
                 }
 
                 Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
                     text: "A R C H L I N U X   A R M 6 4"
                     color: "#DDEAF3"
                     font.pixelSize: 14

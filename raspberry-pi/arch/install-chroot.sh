@@ -550,6 +550,8 @@ install -d -m 0755 \
 cat > "$HOME_DIR/.config/xfce4/terminal/terminalrc" <<'EOF_TERMINAL'
 [Configuration]
 MiscMenubarDefault=FALSE
+MiscShowUnsafePasteDialog=FALSE
+ScrollingBar=TERMINAL_SCROLLBAR_NONE
 EOF_TERMINAL
 
 # ------------------------------------------------------------

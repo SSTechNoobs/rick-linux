@@ -35,7 +35,7 @@ hl.monitor({
 ---------------------
 
 -- Set programs that you use
-local terminal    = "xfce4-terminal"
+local terminal    = "xfce4-terminal --hide-scrollbar"
 local fileManager = "pcmanfm"
 local menu        = "hyprlauncher"
 

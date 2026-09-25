@@ -22,10 +22,8 @@ def get_os_pretty_name():
                     key, value = line.split("=", 1)
                     values[key] = value.strip().strip('"')
 
-            name = values.get("NAME", "Ricks Hyprland")
-            version = values.get("VERSION", "")
-
-            return f"{name} {version}".strip()
+            base = values.get("BASE", "Arch Linux ARM")
+            return base
         except Exception:
             pass
 
