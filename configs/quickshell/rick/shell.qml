@@ -311,23 +311,23 @@ ShellRoot {
             }
         }
 
-        Text {
+        Image {
             id: ricksLabel
             anchors.left: powerButton.right
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
 
-            text: "Ricks Linux"
-            color: "#ffffff"
-            font.pixelSize: 17
-            font.bold: true
-        
+            width: 30
+            height: 30
+            source: "file:///home/rick/.config/quickshell/rick/icons/arch-bar.svg"
+            fillMode: Image.PreserveAspectFit
+            smooth: true
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: appMenu.visible = !appMenu.visible
             }
-}
+        }
 
         Rectangle {
             id: pcmanfmButton

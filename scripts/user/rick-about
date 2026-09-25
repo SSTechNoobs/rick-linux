@@ -9,9 +9,6 @@ cat <<'LOGO'
    ───────────
 LOGO
 
-printf '\033[38;2;176;183;188m'
-printf '   Dallas Cowboys Edition\n'
-printf '\033[0m'
 
 if [[ -r /etc/rick-linux-install-date ]]; then
     RAW_DATE="$(cat /etc/rick-linux-install-date)"

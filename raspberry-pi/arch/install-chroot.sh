@@ -536,6 +536,15 @@ chmod 0755 \
     /usr/bin/xfce4-terminal \
     /usr/local/bin/xed
 
+# Xfce Terminal - clean Ricks Hyprland appearance
+install -d -m 0755 \
+    "$HOME_DIR/.config/xfce4/terminal"
+
+cat > "$HOME_DIR/.config/xfce4/terminal/terminalrc" <<'EOF_TERMINAL'
+[Configuration]
+MiscMenubarDefault=FALSE
+EOF_TERMINAL
+
 # ------------------------------------------------------------
 # Aether ARM64 binary
 # ------------------------------------------------------------
