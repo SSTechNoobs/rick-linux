@@ -284,7 +284,8 @@ ln -sfn \
 for unit in \
     rick-aether-theme.service \
     rick-aether-theme.path \
-    rick-wallpaper.service
+    rick-wallpaper.service \
+    rick-audio-volume.service
 do
     install -m 0644 \
         "$SOURCE_DIR/configs/systemd/user/$unit" \
@@ -295,6 +296,11 @@ done
 ln -sfn \
     ../rick-aether-theme.path \
     "$USER_HOME/.config/systemd/user/default.target.wants/rick-aether-theme.path"
+
+# Set the default audio output to 100% at login.
+ln -sfn \
+    ../rick-audio-volume.service \
+    "$USER_HOME/.config/systemd/user/default.target.wants/rick-audio-volume.service"
 
 # Enable Mako notification daemon for the graphical Wayland session.
 ln -sfn \

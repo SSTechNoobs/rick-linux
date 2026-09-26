@@ -1,0 +1,11 @@
+[Unit]
+Description=Set Ricks Hyprland audio volume to 100%
+After=pipewire.service wireplumber.service
+Wants=pipewire.service wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rick-audio-volume
+
+[Install]
+WantedBy=default.target
