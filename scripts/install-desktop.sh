@@ -158,6 +158,7 @@ install -d \
     "$USER_HOME/.config/quickshell/rick/weather-icons" \
     "$USER_HOME/.config/hypr" \
     "$USER_HOME/.config/ghostty" \
+    "$USER_HOME/.config/libfm" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper" \
     "$USER_HOME/.config/aether/theme" \
     "$USER_HOME/.config/systemd/user/default.target.wants" \
@@ -231,6 +232,10 @@ cp -a \
 install -m 0644 \
     "$SOURCE_DIR/configs/ghostty/config" \
     "$USER_HOME/.config/ghostty/config"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/libfm/libfm.conf" \
+    "$USER_HOME/.config/libfm/libfm.conf"
 
 cat > "$USER_HOME/.config/user-dirs.dirs" <<'EOF_XDG'
 XDG_DESKTOP_DIR="$HOME/Desktop"
