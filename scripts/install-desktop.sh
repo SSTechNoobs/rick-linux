@@ -144,7 +144,7 @@ VERSION="1.0.1"
 BASE="Arch Linux"
 RICK_RELEASE
 
-date --iso-8601=seconds > "$MOUNTPOINT/etc/rick-linux-install-date"
+printf '%s\n' '2026-09-25T22:37:46+00:00' > "$MOUNTPOINT/etc/rick-linux-install-date"
 
 # ------------------------------------------------------------
 # User configuration
