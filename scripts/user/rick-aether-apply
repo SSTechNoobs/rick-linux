@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+THEME="$HOME/.config/aether/theme"
+ICON_FILE="$THEME/icons.theme"
+
+# Give Aether a moment to finish writing all theme files.
+sleep 0.3
+
+# Apply Aether's requested GTK/icon theme.
+if [[ -s "$ICON_FILE" ]]; then
+    ICON_THEME="$(head -n1 "$ICON_FILE" | xargs)"
+
+    if [[ -n "$ICON_THEME" ]]; then
+        gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
+    fi
+fi
+
+# Apply the current Aether wallpaper through systemd.
+systemctl --user restart rick-wallpaper.service
+
+# Reload Hyprland so hyprland.lua rereads Aether's colors.
+hyprctl reload >/dev/null 2>&1 || true

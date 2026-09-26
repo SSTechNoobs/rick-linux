@@ -90,6 +90,30 @@ hl.env("HYPRCURSOR_SIZE", "24")
 -----------------------
 
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
+
+-- Ricks Hyprland: read current Aether active-border color.
+local function ricksAetherActiveBorder()
+    local home = os.getenv("HOME")
+    local path = home .. "/.config/aether/theme/hyprland.conf"
+    local file = io.open(path, "r")
+
+    if file then
+        local data = file:read("*a")
+        file:close()
+
+        local color = data:match("%$activeBorderColor%s*=%s*rgb%(([%x]+)%)")
+
+        if color then
+            return "rgba(" .. color .. "ff)"
+        end
+    end
+
+    return {
+        colors = {"rgba(33ccffee)", "rgba(00ff99ee)"},
+        angle = 45
+    }
+end
+
 hl.config({
     general = {
         gaps_in  = 5,
@@ -98,7 +122,7 @@ hl.config({
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
+            active_border   = ricksAetherActiveBorder(),
             inactive_border = "rgba(595959aa)",
         },
 

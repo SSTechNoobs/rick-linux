@@ -2,21 +2,17 @@
 
 PERMANENT="$HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
 THEME="$HOME/.config/aether/theme"
-POINTER="$THEME/ricks-wallpaper-wallpaper.txt"
+AETHER_WALLPAPER="$THEME/backgrounds/wallpaper.png"
 
 WALLPAPER=""
 
-# Ricks Linux permanent wallpaper always wins.
-if [[ -f "$PERMANENT" ]]; then
-    WALLPAPER="$PERMANENT"
-elif [[ -s "$POINTER" ]]; then
-    candidate="$(head -n1 "$POINTER")"
-    [[ -f "$candidate" ]] && WALLPAPER="$candidate"
-fi
+# Current Aether theme wallpaper wins.
+if [[ -f "$AETHER_WALLPAPER" ]]; then
+    WALLPAPER="$AETHER_WALLPAPER"
 
-if [[ -z "$WALLPAPER" || ! -f "$WALLPAPER" ]]; then
-    WALLPAPER="$(find "$THEME/backgrounds" \
-        -maxdepth 1 -type f -print -quit 2>/dev/null)"
+# Fall back to the permanent Ricks Hyprland wallpaper.
+elif [[ -f "$PERMANENT" ]]; then
+    WALLPAPER="$PERMANENT"
 fi
 
 [[ -n "$WALLPAPER" && -f "$WALLPAPER" ]] || exit 0

@@ -1,0 +1,6 @@
+[Unit]
+Description=Apply Aether theme to Ricks Hyprland
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rick-aether-apply

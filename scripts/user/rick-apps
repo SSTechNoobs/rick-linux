@@ -1,0 +1,223 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+import os
+import sys
+
+APP_DIRS = [
+    Path.home() / ".local/share/applications",
+    Path("/usr/share/applications"),
+]
+
+ICON_DIRS = [
+    Path.home() / ".local/share/icons",
+    Path.home() / ".icons",
+    Path("/usr/share/icons/hicolor"),
+    Path("/usr/share/icons/Adwaita"),
+    Path("/usr/share/icons/AdwaitaLegacy"),
+    Path("/usr/share/pixmaps"),
+]
+
+
+def read_desktop(path):
+    data = {}
+    in_desktop_entry = False
+
+    try:
+        for raw in path.read_text(errors="ignore").splitlines():
+            line = raw.strip()
+
+            if line == "[Desktop Entry]":
+                in_desktop_entry = True
+                continue
+
+            if line.startswith("[") and line.endswith("]"):
+                if in_desktop_entry:
+                    break
+                continue
+
+            if not in_desktop_entry:
+                continue
+
+            if "=" not in line or line.startswith("#"):
+                continue
+
+            key, value = line.split("=", 1)
+
+            # Prefer the plain non-localized value.
+            if "[" not in key:
+                data[key] = value
+
+    except Exception:
+        return {}
+
+    return data
+
+
+def truthy(value):
+    return value.lower() in ("1", "true", "yes")
+
+
+def find_icon(icon):
+    if not icon:
+        return ""
+
+    p = Path(icon)
+
+    if p.is_absolute() and p.exists():
+        return str(p)
+
+    names = []
+
+    if Path(icon).suffix.lower() in (".png", ".svg", ".xpm"):
+        names.append(icon)
+    else:
+        names.extend([
+            icon + ".svg",
+            icon + ".png",
+            icon + ".xpm",
+        ])
+
+    # Prefer larger hicolor icons where possible.
+    preferred = [
+        Path("/usr/share/icons/hicolor/512x512/apps"),
+        Path("/usr/share/icons/hicolor/256x256/apps"),
+        Path("/usr/share/icons/hicolor/128x128/apps"),
+        Path("/usr/share/icons/hicolor/64x64/apps"),
+        Path("/usr/share/icons/hicolor/48x48/apps"),
+        Path("/usr/share/icons/hicolor/scalable/apps"),
+        Path("/usr/share/pixmaps"),
+    ]
+
+    for directory in preferred:
+        for name in names:
+            candidate = directory / name
+            if candidate.exists():
+                return str(candidate)
+
+    # Fall back to all standard icon directories.
+    for base in ICON_DIRS:
+        if not base.exists():
+            continue
+
+        for name in names:
+            try:
+                matches = list(base.rglob(name))
+            except Exception:
+                continue
+
+            if matches:
+                return str(matches[0])
+
+    return ""
+
+
+def applications():
+    found = {}
+
+    # User entries take priority over system entries.
+    for directory in APP_DIRS:
+        if not directory.exists():
+            continue
+
+        for path in sorted(directory.glob("*.desktop")):
+            desktop_id = path.name
+            data = read_desktop(path)
+
+            if not data:
+                continue
+
+            if data.get("Type", "Application") != "Application":
+                continue
+
+            if truthy(data.get("Hidden", "false")):
+                continue
+
+            if truthy(data.get("NoDisplay", "false")):
+                continue
+
+            name = data.get("Name", "").strip()
+            exec_line = data.get("Exec", "").strip()
+
+            if not name or not exec_line:
+                continue
+
+            # Ricks Hyprland launcher: only show user-selected software.
+            allowed_apps = {
+                "Aether",
+                "Calculator",
+                "ChatGPT",
+                "Ghostty",
+                "Google Chrome",
+                "PCMan File Manager",
+                "Steam",
+                "Text Editor",
+            }
+
+            if name not in allowed_apps:
+                continue
+
+            # Keep first occurrence so ~/.local overrides /usr.
+            if desktop_id in found:
+                continue
+
+            found[desktop_id] = {
+                "id": desktop_id,
+                "name": name,
+                "icon_name": data.get("Icon", "").strip(),
+                "path": str(path),
+            }
+
+    # De-duplicate obvious duplicate launchers by visible name.
+    unique = {}
+    for app in found.values():
+        key = app["name"].casefold()
+
+        if key not in unique:
+            unique[key] = app
+
+    result = list(unique.values())
+    result.sort(key=lambda x: x["name"].casefold())
+
+    for app in result:
+        app["icon"] = find_icon(app["icon_name"])
+
+    return result
+
+
+def clean(value):
+    return value.replace("|", " ").replace("\n", " ").strip()
+
+
+def main():
+    command = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+    if command == "list":
+        for app in applications():
+            print(
+                f'{clean(app["id"])}|'
+                f'{clean(app["name"])}|'
+                f'{clean(app["icon_name"])}|'
+                f'{clean(app["icon"])}'
+            )
+        return
+
+    if command == "launch":
+        if len(sys.argv) != 3:
+            print("usage: rick-apps launch DESKTOP_FILE", file=sys.stderr)
+            raise SystemExit(2)
+
+        desktop_id = sys.argv[2]
+
+        # gtk-launch expects the desktop-file ID without .desktop.
+        if desktop_id.endswith(".desktop"):
+            desktop_id = desktop_id[:-8]
+
+        os.execvp("gtk-launch", ["gtk-launch", desktop_id])
+
+    print("usage: rick-apps {list|launch DESKTOP_FILE}", file=sys.stderr)
+    raise SystemExit(2)
+
+
+if __name__ == "__main__":
+    main()

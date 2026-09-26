@@ -2,6 +2,9 @@
 
 BOOT="$HOME/Pictures/RicksLinuxSplash/boot.png"
 
+# Keep the managed wallpaper out of the way while the boot splash is shown.
+systemctl --user stop rick-wallpaper.service >/dev/null 2>&1 || true
+
 # Immediately keep the Ricks Linux boot image on screen
 if [[ -f "$BOOT" ]]; then
     pkill -x swaybg 2>/dev/null || true
@@ -29,5 +32,7 @@ for i in $(seq 1 40); do
     sleep 0.25
 done
 
-# Desktop is ready: switch to the normal Aether wallpaper
-"$HOME/.local/bin/rick-wallpaper-apply"
+# Desktop is ready: replace the splash with the managed Aether wallpaper.
+pkill -x swaybg 2>/dev/null || true
+sleep 0.1
+systemctl --user start rick-wallpaper.service

@@ -1,0 +1,5 @@
+# Aether theme colors
+config-file = /home/rick/.config/aether/theme/ghostty.conf
+
+# Ricks Hyprland glass terminal
+background-opacity = 0.72

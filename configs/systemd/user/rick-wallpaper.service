@@ -1,0 +1,10 @@
+[Unit]
+Description=Ricks Hyprland Wallpaper
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/swaybg -i %h/.config/aether/theme/backgrounds/wallpaper.png -m fill
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

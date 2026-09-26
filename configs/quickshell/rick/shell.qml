@@ -9,19 +9,11 @@ ShellRoot {
     id: root
 
     HyprlandFocusGrab {
-        id: powerMenuGrab
-        windows: [powerMenu]
+        id: appMenuGrab
+        windows: [appMenu, powerMenu]
 
         onCleared: {
             powerMenu.visible = false
-        }
-    }
-
-    HyprlandFocusGrab {
-        id: appMenuGrab
-        windows: [appMenu]
-
-        onCleared: {
             appMenu.visible = false
         }
     }
@@ -43,11 +35,92 @@ ShellRoot {
     }
 
     property string netStatus: "Checking..."
+
+    property var taskbarPins: []
+
+    function refreshTaskbarPins() {
+        taskbarPinsProc.running = false
+
+        Qt.callLater(function() {
+            taskbarPinsProc.running = true
+        })
+    }
+
+    Process {
+        id: taskbarPinsProc
+
+        command: [
+            "/home/rick/.local/bin/rick-taskbar-pins",
+            "list"
+        ]
+
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var pins = []
+                var output = this.text.trim()
+
+                if (output.length > 0) {
+                    var lines = output.split("\n")
+
+                    for (var i = 0; i < lines.length; ++i) {
+                        var parts = lines[i].split("|")
+
+                        if (parts.length >= 4) {
+                            pins.push({
+                                key: parts[0],
+                                name: parts[1],
+                                icon: parts[2],
+                                size: parseInt(parts[3])
+                            })
+                        }
+                    }
+                }
+
+                root.taskbarPins = pins
+            }
+        }
+    }
+
     property string btStatus: "..."
     property string volumeStatus: "..."
     property string weatherStatus: "Weather..."
     property string forecastStatus: "Loading forecast..."
     property var weatherData: ({})
+
+    // Aether global-theme colors.
+    property string themeBackground: "#041E42"
+    property string themeForeground: "#FFFFFF"
+    property string themeAccent: "#003594"
+    property string themeMuted: "#869397"
+    property string themeSurface: "#0C2340"
+    property string themeBright: "#DDF8FF"
+
+    Process {
+        id: aetherBarColorProc
+
+        command: [
+            "/home/rick/.local/bin/rick-aether-colors"
+        ]
+
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var parts = this.text.trim().split("|")
+
+                if (parts.length >= 6) {
+                    root.themeBackground = parts[0]
+                    root.themeForeground = parts[1]
+                    root.themeAccent = parts[2]
+                    root.themeMuted = parts[3]
+                    root.themeSurface = parts[4]
+                    root.themeBright = parts[5]
+                }
+            }
+        }
+    }
 
     SystemClock {
         id: clock
@@ -181,34 +254,12 @@ ShellRoot {
             onDoubleClicked: bar.solidBar = !bar.solidBar
         }
 
-        Rectangle {
-            id: powerButton
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "⏻"
-                color: "#ffffff"
-                font.pixelSize: 19
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: powerMenu.visible = !powerMenu.visible
-            }
-        }
 
         PopupWindow {
             id: powerMenu
 
             anchor.window: bar
-            anchor.rect.x: powerButton.x
+            anchor.rect.x: 10
             anchor.rect.y: -height
 
             width: 170
@@ -216,21 +267,11 @@ ShellRoot {
             visible: false
             color: "transparent"
 
-            onVisibleChanged: {
-                if (visible) {
-                    Qt.callLater(function() {
-                        powerMenuGrab.active = true
-                    })
-                } else {
-                    powerMenuGrab.active = false
-                }
-            }
-
             Rectangle {
                 anchors.fill: parent
                 radius: 10
-                color: "#0C2340"
-                border.color: "#7F9695"
+                color: root.themeSurface
+                border.color: root.themeMuted
                 border.width: 1
 
                 Column {
@@ -311,140 +352,88 @@ ShellRoot {
             }
         }
 
-        Text {
+        Item {
             id: ricksLabel
-            anchors.left: powerButton.right
-            anchors.leftMargin: 8
+
+            anchors.left: parent.left
+            anchors.leftMargin: 10
             anchors.verticalCenter: parent.verticalCenter
 
-            text: "Ricks Linux"
-            color: "#ffffff"
-            font.pixelSize: 17
-            font.bold: true
-        
+            width: 52
+            height: 38
+
+            Image {
+                anchors.centerIn: parent
+
+                width: 48
+                height: 36
+
+                source: "file:///home/rick/.config/quickshell/rick/icons/cowboys-helmet.png"
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
+            }
 
             MouseArea {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: appMenu.visible = !appMenu.visible
             }
-}
+        }
 
-        Rectangle {
-            id: pcmanfmButton
+        Row {
+            id: pinnedAppsRow
+
             anchors.left: ricksLabel.right
             anchors.leftMargin: 10
             anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
 
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/pcmanfm.svg"
-                fillMode: Image.PreserveAspectFit
-            }
+            spacing: 6
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-files"])
-            }
-        }
+            Repeater {
+                model: root.taskbarPins
 
-                Rectangle {
-            id: terminalButton
-            anchors.left: pcmanfmButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
+                delegate: Rectangle {
+                    required property var modelData
 
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/ghostty.png"
-                fillMode: Image.PreserveAspectFit
-            }
+                    width: 42
+                    height: 32
+                    radius: 8
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["ghostty"])
-            }
-        }
+                    color: pinMouse.containsMouse
+                        ? Qt.rgba(0.53, 0.58, 0.59, 0.20)
+                        : "transparent"
 
-Rectangle {
-            id: chatgptButton
-            anchors.left: chromeButton.right
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
+                    Image {
+                        anchors.centerIn: parent
 
-            Image {
-                anchors.centerIn: parent
-                width: 22
-                height: 22
-                source: "file:///home/rick/.config/quickshell/rick/icons/chatgpt.png"
-                    fillMode: Image.PreserveAspectFit
+                        width: modelData.size
+                        height: modelData.size
+
+                        source: modelData.icon.length > 0
+                      ? (modelData.icon.startsWith("/")
+                          ? "file://" + modelData.icon
+                          : modelData.icon)
+                      : ""
+
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    MouseArea {
+                        id: pinMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+
+                        onClicked: {
+                            Quickshell.execDetached([
+                                "/home/rick/.local/bin/rick-taskbar-pins",
+                                "run",
+                                modelData.key
+                            ])
+                        }
+                    }
                 }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-chatgpt"])
-                }
-            }
-
-        Rectangle {
-            id: chromeButton
-            anchors.left: terminalButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/chrome.png"
-                fillMode: Image.PreserveAspectFit
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-chrome"])
-            }
-        }
-
-        Rectangle {
-            anchors.left: chatgptButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/steam.png"
-                fillMode: Image.PreserveAspectFit
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-steam"])
             }
         }
 
@@ -452,7 +441,7 @@ Rectangle {
             id: hyprLabel
             anchors.centerIn: parent
             text: "Hyprland"
-            color: "#9ca3af"
+            color: root.themeMuted
             font.pixelSize: 14
         }
 
@@ -462,7 +451,7 @@ Rectangle {
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             text: root.weatherStatus
-            color: "#ffffff"
+            color: root.themeForeground
             font.pixelSize: 14
 
             MouseArea {
@@ -637,7 +626,7 @@ Rectangle {
                                         ? root.weatherData.current.temperature + "°"
                                         : "--°"
 
-                                    color: "#FFFFFF"
+                                    color: root.themeForeground
                                     font.pixelSize: 66
                                     font.bold: true
                                 }
@@ -650,7 +639,7 @@ Rectangle {
                                         text: root.weatherData.location
                                             || "Cedar Falls, Iowa"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 21
                                         font.bold: true
                                     }
@@ -660,7 +649,7 @@ Rectangle {
                                             ? root.weatherData.current.condition
                                             : "Loading..."
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -672,7 +661,7 @@ Rectangle {
                                               + "°"
                                             : ""
 
-                                        color: "#D1E9F7"
+                                        color: root.themeBright
                                         font.pixelSize: 14
                                     }
                                 }
@@ -681,7 +670,7 @@ Rectangle {
 
                         Text {
                             text: "Hourly Forecast"
-                            color: "#FFFFFF"
+                            color: root.themeForeground
                             font.pixelSize: 17
                             font.bold: true
                         }
@@ -722,7 +711,7 @@ Rectangle {
                                                     "h AP"
                                                 )
 
-                                                color: "#EAF7FF"
+                                                color: root.themeBright
                                                 font.pixelSize: 12
                                             }
 
@@ -745,7 +734,7 @@ Rectangle {
                                                     parent.horizontalCenter
 
                                                 text: modelData.temp + "°"
-                                                color: "#FFFFFF"
+                                                color: root.themeForeground
                                                 font.pixelSize: 20
                                                 font.bold: true
                                             }
@@ -755,7 +744,7 @@ Rectangle {
                                                     parent.horizontalCenter
 
                                                 text: "Rain " + modelData.rain + "%"
-                                                color: "#C8EAFF"
+                                                color: root.themeBright
                                                 font.pixelSize: 10
                                             }
                                         }
@@ -782,7 +771,7 @@ Rectangle {
                                         anchors.horizontalCenter:
                                             parent.horizontalCenter
                                         text: "Humidity"
-                                        color: "#CDE8F7"
+                                        color: root.themeBright
                                         font.pixelSize: 13
                                     }
 
@@ -796,7 +785,7 @@ Rectangle {
                                               + "%"
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 21
                                         font.bold: true
                                     }
@@ -818,7 +807,7 @@ Rectangle {
                                         anchors.horizontalCenter:
                                             parent.horizontalCenter
                                         text: "Wind"
-                                        color: "#CDE8F7"
+                                        color: root.themeBright
                                         font.pixelSize: 13
                                     }
 
@@ -831,7 +820,7 @@ Rectangle {
                                               + " mph"
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 21
                                         font.bold: true
                                     }
@@ -853,7 +842,7 @@ Rectangle {
                                         anchors.horizontalCenter:
                                             parent.horizontalCenter
                                         text: "Rain Chance"
-                                        color: "#CDE8F7"
+                                        color: root.themeBright
                                         font.pixelSize: 13
                                     }
 
@@ -867,7 +856,7 @@ Rectangle {
                                               + "%"
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 21
                                         font.bold: true
                                     }
@@ -905,7 +894,7 @@ Rectangle {
                                               )
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -930,7 +919,7 @@ Rectangle {
                                               )
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -941,7 +930,7 @@ Rectangle {
 
                                     Text {
                                         text: "Today"
-                                        color: "#CDE8F7"
+                                        color: root.themeBright
                                         font.pixelSize: 14
                                     }
 
@@ -954,7 +943,7 @@ Rectangle {
                                               + "°"
                                             : "--"
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -977,7 +966,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 text: "10-Day Forecast"
-                                color: "#FFFFFF"
+                                color: root.themeForeground
                                 font.pixelSize: 18
                                 font.bold: true
                             }
@@ -1029,7 +1018,7 @@ Rectangle {
                                                         : "ddd M/d"
                                                 )
 
-                                                color: "#FFFFFF"
+                                                color: root.themeForeground
                                                 font.pixelSize: 12
                                                 font.bold: index === 0
                                             }
@@ -1053,7 +1042,7 @@ Rectangle {
                                                     parent.verticalCenter
 
                                                 text: modelData.high + "°"
-                                                color: "#FFFFFF"
+                                                color: root.themeForeground
                                                 font.pixelSize: 14
                                                 font.bold: true
                                             }
@@ -1064,7 +1053,7 @@ Rectangle {
                                                     parent.verticalCenter
 
                                                 text: modelData.low + "°"
-                                                color: "#BFD9E8"
+                                                color: root.themeMuted
                                                 font.pixelSize: 14
                                             }
 
@@ -1197,7 +1186,7 @@ Rectangle {
                 leftPadding: 5
 
                 text: Qt.formatDateTime(clock.date, "ddd MMM d   h:mm AP")
-                color: "#ffffff"
+                color: root.themeForeground
                 font.pixelSize: 14
             
                 MouseArea {
@@ -1267,7 +1256,7 @@ Rectangle {
                     text: updateButton.updateCount > 0
                           ? "⬆ " + updateButton.updateCount
                           : "⬆"
-                    color: updateButton.updateCount > 0 ? "#ffffff" : "#869397"
+                    color: updateButton.updateCount > 0 ? root.themeForeground : root.themeMuted
                     font.pixelSize: 14
                     font.bold: updateButton.updateCount > 0
                 }
@@ -1323,8 +1312,8 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     radius: 12
-                    color: "#0C2340"
-                    border.color: "#869397"
+                    color: root.themeSurface
+                    border.color: root.themeMuted
                     border.width: 1
 
                     MouseArea {
@@ -1344,7 +1333,7 @@ Rectangle {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: Qt.formatDateTime(clock.date, "MMMM yyyy")
-                            color: "#FFFFFF"
+                            color: root.themeForeground
                             font.pixelSize: 18
                             font.bold: true
                         }
@@ -1352,7 +1341,7 @@ Rectangle {
                         Rectangle {
                             width: parent.width
                             height: 1
-                            color: "#869397"
+                            color: root.themeMuted
                         }
 
                         Grid {
@@ -1369,7 +1358,7 @@ Rectangle {
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     text: modelData
-                                    color: "#869397"
+                                    color: root.themeMuted
                                     font.pixelSize: 11
                                     font.bold: true
                                 }
@@ -1390,7 +1379,7 @@ Rectangle {
                                         dayNumber === dateCalendar.today
                                         && dayNumber > 0
                                         && dayNumber <= dateCalendar.daysInMonth
-                                        ? "#003594"
+                                        ? root.themeAccent
                                         : "transparent"
 
                                     Text {
@@ -1402,7 +1391,7 @@ Rectangle {
                                             ? parent.dayNumber
                                             : ""
 
-                                        color: "#FFFFFF"
+                                        color: root.themeForeground
                                         font.pixelSize: 13
                                         font.bold:
                                             parent.dayNumber === dateCalendar.today
@@ -1417,17 +1406,18 @@ Rectangle {
         }
     
 
-        PopupWindow {
+        RickAboutPopup {
+            id: aboutPopup
+            barWindow: bar
+        }
+
+        RickLauncherPopup {
             id: appMenu
 
-
-            anchor.window: bar
-            anchor.rect.x: 10
-            anchor.rect.y: -height
-
-            width: 520
-            height: 560
-            visible: false
+            barWindow: bar
+            aboutPopupWindow: aboutPopup
+            powerMenuWindow: powerMenu
+            shellRoot: root
 
             onVisibleChanged: {
                 if (visible) {
@@ -1436,215 +1426,6 @@ Rectangle {
                     })
                 } else {
                     appMenuGrab.active = false
-                }
-            }
-
-            color: "transparent"
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 12
-                color: "#0C2340"
-
-                border.color: "#869397"
-                border.width: 1
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 14
-                    spacing: 10
-
-                    Text {
-                        text: "★  RICKS LINUX"
-                        color: "#FFFFFF"
-                        font.pixelSize: 20
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: "Dallas Cowboys Edition"
-                        color: "#869397"
-                        font.pixelSize: 12
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: "#869397"
-                    }
-
-                    Row {
-                        spacing: 12
-
-                        Column {
-                            width: 236
-                            spacing: 5
-
-                            Text {
-                                text: "APPS"
-                                color: "#869397"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-
-                            Repeater {
-                                model: [
-                                    {
-                                        name: "Aether",
-                                        cmd: ["aether"]
-                                    },
-                                    {
-                                        name: "Calculator",
-                                        cmd: ["gnome-calculator"]
-                                    },
-                                    {
-                                        name: "ChatGPT",
-                                        cmd: ["/home/rick/.local/bin/rick-chatgpt"]
-                                    },
-                                    {
-                                        name: "Google Chrome",
-                                        cmd: ["/home/rick/.local/bin/rick-chrome"]
-                                    },
-                                    {
-                                        name: "Ghostty Terminal",
-                                        cmd: ["ghostty"]
-                                    },
-                                    {
-                                        name: "Xed",
-                                        cmd: ["xed"]
-                                    },
-                                    {
-                                        name: "PCManFM Files",
-                                        cmd: ["/home/rick/.local/bin/rick-files"]
-                                    },
-                                    {
-                                        name: "Steam",
-                                        cmd: ["/home/rick/.local/bin/rick-steam"]
-                                    }
-                                ]
-
-                                delegate: Rectangle {
-                                    required property var modelData
-
-                                    width: 236
-                                    height: 42
-                                    radius: 7
-
-                                    color: appMouse.containsMouse
-                                        ? "#003594"
-                                        : "#111827"
-
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 14
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        text: modelData.name
-                                        color: "#FFFFFF"
-                                        font.pixelSize: 14
-                                    }
-
-                                    MouseArea {
-                                        id: appMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-
-                                        onClicked: {
-                                            appMenu.visible = false
-                                            Quickshell.execDetached(modelData.cmd)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Column {
-                            width: 236
-                            spacing: 5
-
-                            Text {
-                                text: "SYSTEM"
-                                color: "#869397"
-                                font.pixelSize: 12
-                                font.bold: true
-                            }
-
-                            Repeater {
-                                model: [
-                                    {
-                                        name: "About Ricks Linux",
-                                        cmd: [
-                                            "ghostty",
-                                            "-e",
-                                            "/home/rick/.local/bin/rick-about"
-                                        ]
-                                    },
-                                    {
-                                        name: "Bluetooth",
-                                        cmd: [
-                                            "/home/rick/.local/bin/rick-bluetooth"
-                                        ]
-                                    },
-                                    {
-                                        name: "Network",
-                                        cmd: ["nm-connection-editor"]
-                                    },
-                                    {
-                                        name: "Printer Settings",
-                                        cmd: ["system-config-printer"]
-                                    },
-                                    {
-                                        name: "Volume",
-                                        cmd: [
-                                            "/home/rick/.local/bin/rick-volume"
-                                        ]
-                                    },
-                                    {
-                                        name: "Power",
-                                        action: "power"
-                                    }
-                                ]
-
-                                delegate: Rectangle {
-                                    required property var modelData
-
-                                    width: 236
-                                    height: 42
-                                    radius: 7
-
-                                    color: sysMouse.containsMouse
-                                        ? "#003594"
-                                        : "#111827"
-
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 14
-                                        anchors.verticalCenter: parent.verticalCenter
-
-                                        text: modelData.name
-                                        color: "#FFFFFF"
-                                        font.pixelSize: 14
-                                    }
-
-                                    MouseArea {
-                                        id: sysMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-
-                                        onClicked: {
-                                            appMenu.visible = false
-
-                                            if (modelData.action === "power") {
-                                                powerMenu.visible = true
-                                            } else {
-                                                Quickshell.execDetached(modelData.cmd)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }

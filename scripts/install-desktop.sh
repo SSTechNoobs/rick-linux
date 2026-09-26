@@ -154,9 +154,13 @@ info "Installing Ricks Linux user configuration..."
 
 install -d \
     "$USER_HOME/.config/quickshell/rick/icons" \
+    "$USER_HOME/.config/quickshell/rick/system-icons" \
     "$USER_HOME/.config/quickshell/rick/weather-icons" \
     "$USER_HOME/.config/hypr" \
+    "$USER_HOME/.config/ghostty" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper" \
+    "$USER_HOME/.config/aether/theme" \
+    "$USER_HOME/.config/systemd/user/default.target.wants" \
     "$USER_HOME/.config/systemd/user/timers.target.wants" \
     "$USER_HOME/.config/systemd/user/graphical-session.target.wants" \
     "$USER_HOME/.local/bin" \
@@ -173,9 +177,21 @@ install -m 0644 \
     "$SOURCE_DIR/configs/quickshell/rick/shell.qml" \
     "$USER_HOME/.config/quickshell/rick/shell.qml"
 
+install -m 0644 \
+    "$SOURCE_DIR/configs/quickshell/rick/RickLauncherPopup.qml" \
+    "$USER_HOME/.config/quickshell/rick/RickLauncherPopup.qml"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/quickshell/rick/RickAboutPopup.qml" \
+    "$USER_HOME/.config/quickshell/rick/RickAboutPopup.qml"
+
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/icons/." \
     "$USER_HOME/.config/quickshell/rick/icons/"
+
+cp -a \
+    "$SOURCE_DIR/configs/quickshell/rick/system-icons/." \
+    "$USER_HOME/.config/quickshell/rick/system-icons/"
 
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/weather-icons/." \
@@ -208,6 +224,14 @@ install -m 0755 \
     "$SOURCE_DIR/configs/aether/custom/ricks-wallpaper/post-apply.sh" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper/post-apply.sh"
 
+cp -a \
+    "$SOURCE_DIR/configs/aether/theme/." \
+    "$USER_HOME/.config/aether/theme/"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/ghostty/config" \
+    "$USER_HOME/.config/ghostty/config"
+
 cat > "$USER_HOME/.config/user-dirs.dirs" <<'EOF_XDG'
 XDG_DESKTOP_DIR="$HOME/Desktop"
 XDG_DOCUMENTS_DIR="$HOME/Documents"
@@ -221,7 +245,6 @@ EOF_XDG
 
 cat > "$USER_HOME/.config/hypr/hyprland.conf" <<'EOF_HYPRCONF'
 exec-once = ~/.local/bin/rick-bar-watchdog
-exec-once = ~/.local/bin/rick-wallpaper-apply
 EOF_HYPRCONF
 
 for optional in hyprtoolkit.conf hyprlauncher.conf; do
@@ -253,6 +276,21 @@ ln -sfn \
     ../rick-update-check.timer \
     "$USER_HOME/.config/systemd/user/timers.target.wants/rick-update-check.timer"
 
+for unit in \
+    rick-aether-theme.service \
+    rick-aether-theme.path \
+    rick-wallpaper.service
+do
+    install -m 0644 \
+        "$SOURCE_DIR/configs/systemd/user/$unit" \
+        "$USER_HOME/.config/systemd/user/$unit"
+done
+
+# Watch for Aether theme changes at login.
+ln -sfn \
+    ../rick-aether-theme.path \
+    "$USER_HOME/.config/systemd/user/default.target.wants/rick-aether-theme.path"
+
 # Enable Mako notification daemon for the graphical Wayland session.
 ln -sfn \
     /usr/lib/systemd/user/mako.service \
@@ -263,13 +301,23 @@ install -m 0644 \
     "$USER_HOME/.bash_profile"
 
 # Replace paths captured from the original development account.
-find \
-    "$USER_HOME/.config/quickshell/rick" \
-    "$USER_HOME/.config/hypr" \
-    "$USER_HOME/.local/bin" \
-    -type f \
-    -exec sed -i \
-        "s#/home/rick#/home/$USERNAME#g" {} +
+# Only modify text files so PNG/SVG assets and wallpapers are never touched.
+while IFS= read -r -d '' file; do
+    if grep -Iq . "$file"; then
+        sed -i \
+            "s#/home/rick#/home/$USERNAME#g" \
+            "$file"
+    fi
+done < <(
+    find \
+        "$USER_HOME/.config/quickshell/rick" \
+        "$USER_HOME/.config/hypr" \
+        "$USER_HOME/.config/ghostty" \
+        "$USER_HOME/.config/aether" \
+        "$USER_HOME/.local/bin" \
+        -type f \
+        -print0
+)
 
 # ------------------------------------------------------------
 # Session helpers

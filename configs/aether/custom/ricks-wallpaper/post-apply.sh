@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-"$HOME/.local/bin/rick-wallpaper-apply"
+
+"$HOME/.local/bin/rick-aether-apply"
