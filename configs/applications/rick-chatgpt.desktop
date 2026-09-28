@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ChatGPT
+Comment=Open ChatGPT
+Exec=/home/rick/.local/bin/rick-chatgpt
+Icon=/home/rick/.local/share/icons/chatgpt.png
+Terminal=false
+Categories=Network;

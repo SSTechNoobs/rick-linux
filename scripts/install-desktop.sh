@@ -76,6 +76,16 @@ arch-chroot "$MOUNTPOINT" \
     mkinitcpio -P
 
 # ------------------------------------------------------------
+# Pacman candy progress bar
+# ------------------------------------------------------------
+
+info "Enabling pacman ILoveCandy progress..."
+
+if ! grep -qxF 'ILoveCandy' "$MOUNTPOINT/etc/pacman.conf"; then
+    sed -i '/^\[options\]/a ILoveCandy'         "$MOUNTPOINT/etc/pacman.conf"
+fi
+
+# ------------------------------------------------------------
 # Enable multilib, then install Steam + 32-bit Intel Vulkan
 # ------------------------------------------------------------
 
@@ -165,6 +175,8 @@ install -d \
     "$USER_HOME/.config/systemd/user/timers.target.wants" \
     "$USER_HOME/.config/systemd/user/graphical-session.target.wants" \
     "$USER_HOME/.local/bin" \
+    "$USER_HOME/.local/share/applications" \
+    "$USER_HOME/.local/share/icons" \
     "$USER_HOME/Desktop" \
     "$USER_HOME/Documents" \
     "$USER_HOME/Downloads" \
@@ -236,6 +248,19 @@ install -m 0644 \
 install -m 0644 \
     "$SOURCE_DIR/configs/libfm/libfm.conf" \
     "$USER_HOME/.config/libfm/libfm.conf"
+
+# ChatGPT launcher and icon.
+install -m 0644 \
+    "$SOURCE_DIR/configs/applications/rick-chatgpt.desktop" \
+    "$USER_HOME/.local/share/applications/rick-chatgpt.desktop"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/icons/chatgpt.png" \
+    "$USER_HOME/.local/share/icons/chatgpt.png"
+
+sed -i \
+    "s#/home/rick#/home/$USERNAME#g" \
+    "$USER_HOME/.local/share/applications/rick-chatgpt.desktop"
 
 cat > "$USER_HOME/.config/user-dirs.dirs" <<'EOF_XDG'
 XDG_DESKTOP_DIR="$HOME/Desktop"
@@ -429,6 +454,22 @@ arch-chroot "$MOUNTPOINT" \
 
 rm -f "$TEMP_SUDO"
 TEMP_SUDO=""
+
+# ------------------------------------------------------------
+# Automatic weekly updates
+# ------------------------------------------------------------
+
+info "Configuring automatic weekly updates..."
+
+AUTO_UPDATE_SUDO="$MOUNTPOINT/etc/sudoers.d/90-ricks-auto-update"
+
+printf '%s ALL=(root) NOPASSWD: /usr/bin/pacman\n' "$USERNAME" \
+    > "$AUTO_UPDATE_SUDO"
+
+chmod 0440 "$AUTO_UPDATE_SUDO"
+
+arch-chroot "$MOUNTPOINT" \
+    visudo -cf /etc/sudoers.d/90-ricks-auto-update >/dev/null
 
 # ------------------------------------------------------------
 # Final checks

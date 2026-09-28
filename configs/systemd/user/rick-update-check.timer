@@ -1,5 +1,5 @@
 [Unit]
-Description=Check Ricks Linux for updates every week
+Description=Automatically update Ricks Hyprland every week
 
 [Timer]
 OnCalendar=Sun *-*-* 10:00:00

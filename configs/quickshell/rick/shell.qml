@@ -473,17 +473,12 @@ ShellRoot {
 
                 onClicked: {
                     weatherCloseTimer.stop()
+                    weatherPopup.pinned = false
+                    weatherPopup.visible = false
 
-                    if (weatherPopup.pinned) {
-                        weatherPopup.pinned = false
-                        weatherPopup.visible = false
-                    } else {
-                        weatherPopup.pinned = true
-                        weatherPopup.visible = true
-
-                        if (!forecastProc.running)
-                            forecastProc.running = true
-                    }
+                    Quickshell.execDetached([
+                        "/home/rick/.local/bin/rick-weather-app"
+                    ])
                 }
             }
         }

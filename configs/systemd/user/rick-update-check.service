@@ -1,5 +1,5 @@
 [Unit]
-Description=Ricks Linux weekly update check
+Description=Ricks Hyprland weekly automatic update
 
 [Service]
 Type=oneshot
