@@ -117,6 +117,17 @@ pacman --disable-sandbox -S \
     --noconfirm \
     "${PACKAGES[@]}"
 
+# Arch Linux ARM ships ex-vi-compat in the base image.
+# Ricks Hyprland uses nano and Mousepad, so remove the
+# unnecessary ex-vi-compat -> vim -> vim-runtime chain.
+if pacman --disable-sandbox -Q ex-vi-compat >/dev/null 2>&1; then
+    info "Removing unneeded Vim compatibility packages..."
+
+    pacman --disable-sandbox -Rns \
+        --noconfirm \
+        ex-vi-compat
+fi
+
 # ------------------------------------------------------------
 # Pi boot configuration
 # ------------------------------------------------------------

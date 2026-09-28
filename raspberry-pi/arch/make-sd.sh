@@ -22,7 +22,7 @@ ROOTFS="$CACHE_DIR/$ROOTFS_NAME"
 MD5_FILE="$ROOTFS.md5"
 
 PI_USER="rick"
-PI_HOSTNAME="ricks-pi"
+PI_HOSTNAME="hyprland-arm64"
 
 die() {
     printf '\nERROR: %s\n' "$*" >&2
@@ -52,6 +52,10 @@ do
     command -v "$CMD" >/dev/null || \
         die "Missing required command: $CMD"
 done
+
+[[ -e /proc/sys/fs/binfmt_misc/qemu-aarch64 ]] || \
+    die "ARM64 binfmt is not registered. Install qemu-user-static-binfmt."
+
 
 [[ -b "$DEVICE" ]] || \
     die "$DEVICE is not a block device."
@@ -136,61 +140,6 @@ PI_PASSHASH="$(
 
 unset PI_PASS PI_PASS2
 
-
-# ------------------------------------------------------------
-# Browser remote desktop password
-# ------------------------------------------------------------
-
-echo
-read -rsp "Remote Desktop password: " REMOTE_PASS
-echo
-read -rsp "Enter Remote Desktop password again: " REMOTE_PASS2
-echo
-
-[[ -n "$REMOTE_PASS" ]] || \
-    die "Remote Desktop password cannot be empty."
-
-[[ ${#REMOTE_PASS} -ge 8 ]] || \
-    die "Remote Desktop password must be at least 8 characters."
-
-[[ "$REMOTE_PASS" == "$REMOTE_PASS2" ]] || \
-    die "Remote Desktop passwords do not match."
-
-REMOTE_AUTH_B64="$(
-    REMOTE_PASSWORD="$REMOTE_PASS" python3 - <<'PY_REMOTE'
-import base64
-import hashlib
-import json
-import os
-import secrets
-
-password = os.environ["REMOTE_PASSWORD"]
-salt = secrets.token_bytes(16)
-iterations = 300000
-
-digest = hashlib.pbkdf2_hmac(
-    "sha256",
-    password.encode(),
-    salt,
-    iterations,
-)
-
-data = {
-    "username": "rick",
-    "salt": salt.hex(),
-    "iterations": iterations,
-    "hash": digest.hex(),
-}
-
-print(
-    base64.b64encode(
-        json.dumps(data).encode()
-    ).decode()
-)
-PY_REMOTE
-)"
-
-unset REMOTE_PASS REMOTE_PASS2
 
 # ------------------------------------------------------------
 # Wi-Fi
@@ -463,7 +412,6 @@ BUILD_ENV="$WORK_DIR/ricks-build.env"
     printf 'RICK_USER=%q\n' "$PI_USER"
     printf 'RICK_HOSTNAME=%q\n' "$PI_HOSTNAME"
     printf 'RICK_PASSHASH=%q\n' "$PI_PASSHASH"
-    printf 'RICK_REMOTE_AUTH_B64=%q\n' "$REMOTE_AUTH_B64"
     printf 'RICK_WIFI_SSID=%q\n' "$WIFI_SSID"
     printf 'RICK_WIFI_PSK=%q\n' "$WIFI_PSK"
 } > "$BUILD_ENV"
@@ -477,7 +425,6 @@ sudo install \
 
 unset WIFI_PSK
 unset PI_PASSHASH
-unset REMOTE_AUTH_B64
 
 # ------------------------------------------------------------
 # Run Arch ARM installation
