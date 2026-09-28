@@ -293,7 +293,7 @@ for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
         "$USER_HOME/.local/bin/$(basename "$helper")"
 done
 
-# Weekly Ricks Linux update checker.
+# Weekly Ricks Hyprland automatic updates.
 install -m 0644 \
     "$SOURCE_DIR/configs/systemd/user/rick-update-check.service" \
     "$USER_HOME/.config/systemd/user/rick-update-check.service"
@@ -305,6 +305,19 @@ install -m 0644 \
 ln -sfn \
     ../rick-update-check.timer \
     "$USER_HOME/.config/systemd/user/timers.target.wants/rick-update-check.timer"
+
+# Start Steam silently every Sunday so Steam/game updates can download.
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-steam-weekly.service" \
+    "$USER_HOME/.config/systemd/user/rick-steam-weekly.service"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-steam-weekly.timer" \
+    "$USER_HOME/.config/systemd/user/rick-steam-weekly.timer"
+
+ln -sfn \
+    ../rick-steam-weekly.timer \
+    "$USER_HOME/.config/systemd/user/timers.target.wants/rick-steam-weekly.timer"
 
 for unit in \
     rick-aether-theme.service \
