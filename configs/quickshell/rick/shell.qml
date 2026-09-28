@@ -72,7 +72,10 @@ ShellRoot {
                                 key: parts[0],
                                 name: parts[1],
                                 icon: parts[2],
-                                size: parseInt(parts[3])
+                                size: parseInt(parts[3]),
+                                state: parts.length >= 5
+                                    ? parts[4]
+                                    : "closed"
                             })
                         }
                     }
@@ -81,6 +84,14 @@ ShellRoot {
                 root.taskbarPins = pins
             }
         }
+    }
+
+    Timer {
+        interval: 750
+        running: true
+        repeat: true
+
+        onTriggered: root.refreshTaskbarPins()
     }
 
     property string btStatus: "..."
@@ -417,6 +428,29 @@ ShellRoot {
                       : ""
 
                         fillMode: Image.PreserveAspectFit
+                    }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 1
+
+                        visible: modelData.state !== "closed"
+
+                        width: modelData.state === "active"
+                            ? 20
+                            : modelData.state === "running"
+                                ? 14
+                                : 9
+
+                        height: modelData.state === "active" ? 3 : 2
+                        radius: 2
+
+                        color: modelData.state === "active"
+                            ? root.themeBright
+                            : modelData.state === "minimized"
+                                ? root.themeMuted
+                                : root.themeAccent
                     }
 
                     MouseArea {
