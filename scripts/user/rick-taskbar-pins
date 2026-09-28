@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+import os
+import subprocess
+import sys
+
+HOME = Path.home()
+PIN_FILE = HOME / ".config/ricks-hyprland/taskbar-pins"
+RICK_APPS = HOME / ".local/bin/rick-apps"
+
+DEFAULT_PINS = [
+    "pcmanfm.desktop",
+    "com.mitchellh.ghostty.desktop",
+    "google-chrome.desktop",
+    "rick-chatgpt.desktop",
+]
+
+ALIASES = {
+    "files": "pcmanfm.desktop",
+    "pcmanfm": "pcmanfm.desktop",
+    "ghostty": "com.mitchellh.ghostty.desktop",
+    "chrome": "google-chrome.desktop",
+    "google-chrome": "google-chrome.desktop",
+    "chatgpt": "rick-chatgpt.desktop",
+    "steam": "steam.desktop",
+}
+
+RUNNERS = {
+    "pcmanfm.desktop": HOME / ".local/bin/rick-files",
+    "google-chrome.desktop": HOME / ".local/bin/rick-chrome",
+    "rick-chatgpt.desktop": HOME / ".local/bin/rick-chatgpt",
+    "steam.desktop": HOME / ".local/bin/rick-steam",
+}
+
+
+def canonical(key):
+    return ALIASES.get(key, key)
+
+
+def ensure_file():
+    PIN_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    if not PIN_FILE.exists():
+        PIN_FILE.write_text("\n".join(DEFAULT_PINS) + "\n")
+
+
+def read_pins():
+    ensure_file()
+
+    result = []
+    seen = set()
+
+    for raw in PIN_FILE.read_text().splitlines():
+        key = canonical(raw.strip())
+
+        if not key or key in seen:
+            continue
+
+        seen.add(key)
+        result.append(key)
+
+    return result
+
+
+def write_pins(pins):
+    PIN_FILE.write_text(
+        "".join(f"{canonical(x)}\n" for x in pins)
+    )
+
+
+def apps():
+    result = {}
+
+    proc = subprocess.run(
+        [str(RICK_APPS), "list"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    for line in proc.stdout.splitlines():
+        parts = line.split("|")
+
+        if len(parts) < 4:
+            continue
+
+        desktop_id, name, icon_name, icon_path = parts[:4]
+
+        result[desktop_id] = {
+            "name": name,
+            "icon": icon_path,
+        }
+
+    return result
+
+
+def list_pins():
+    available = apps()
+
+    for key in read_pins():
+        app = available.get(key)
+
+        if not app:
+            continue
+
+        size = 22 if key == "rick-chatgpt.desktop" else 24
+
+        print(
+            f'{key}|'
+            f'{app["name"]}|'
+            f'{app["icon"]}|'
+            f'{size}'
+        )
+
+
+def run_app(key):
+    key = canonical(key)
+
+    runner = RUNNERS.get(key)
+
+    if runner and runner.exists():
+        os.execv(str(runner), [str(runner)])
+
+    if key == "com.mitchellh.ghostty.desktop":
+        os.execvp("ghostty", ["ghostty"])
+
+    os.execv(
+        str(RICK_APPS),
+        [str(RICK_APPS), "launch", key]
+    )
+
+
+def main():
+    command = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+    if command == "list":
+        list_pins()
+        return
+
+    if len(sys.argv) < 3:
+        print(
+            "usage: rick-taskbar-pins "
+            "{list|status|add|remove|toggle|run} APP",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+    key = canonical(sys.argv[2])
+    pins = read_pins()
+
+    if command == "status":
+        raise SystemExit(0 if key in pins else 1)
+
+    if command == "add":
+        if key not in pins:
+            pins.append(key)
+            write_pins(pins)
+        return
+
+    if command == "remove":
+        pins = [x for x in pins if x != key]
+        write_pins(pins)
+        return
+
+    if command == "toggle":
+        if key in pins:
+            pins = [x for x in pins if x != key]
+            print("removed")
+        else:
+            pins.append(key)
+            print("added")
+
+        write_pins(pins)
+        return
+
+    if command == "run":
+        run_app(key)
+        return
+
+    raise SystemExit(f"Unknown command: {command}")
+
+
+if __name__ == "__main__":
+    main()
