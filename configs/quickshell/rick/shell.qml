@@ -10,7 +10,7 @@ ShellRoot {
 
     HyprlandFocusGrab {
         id: powerMenuGrab
-        windows: [powerMenu]
+        windows: [appMenu, powerMenu]
 
         onCleared: {
             powerMenu.visible = false
@@ -19,7 +19,7 @@ ShellRoot {
 
     HyprlandFocusGrab {
         id: appMenuGrab
-        windows: [appMenu]
+        windows: [appMenu, powerMenu]
 
         onCleared: {
             appMenu.visible = false
@@ -67,6 +67,108 @@ ShellRoot {
         }
     }
 
+    property var taskbarPins: []
+
+    function refreshTaskbarPins() {
+        taskbarPinsProc.running = false
+
+        Qt.callLater(function() {
+            taskbarPinsProc.running = true
+        })
+    }
+
+    Process {
+        id: taskbarPinsProc
+
+        command: [
+            "/home/rick/.local/bin/rick-taskbar-pins",
+            "list"
+        ]
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var pins = []
+                var output = this.text.trim()
+
+                if (output.length > 0) {
+                    var lines = output.split("\n")
+
+                    for (var i = 0; i < lines.length; ++i) {
+                        var parts = lines[i].split("|")
+
+                        if (parts.length >= 4) {
+                            pins.push({
+                                key: parts[0],
+                                name: parts[1],
+                                icon: parts[2],
+                                size: parseInt(parts[3])
+                            })
+                        }
+                    }
+                }
+
+                root.taskbarPins = pins
+            }
+        }
+    }
+
+    property var installedApps: []
+
+    function isPinned(key) {
+        for (var i = 0; i < taskbarPins.length; ++i) {
+            if (taskbarPins[i].key === key)
+                return true
+        }
+
+        return false
+    }
+
+    function refreshInstalledApps() {
+        appListProc.running = false
+
+        Qt.callLater(function() {
+            appListProc.running = true
+        })
+    }
+
+    Process {
+        id: appListProc
+
+        command: [
+            "/home/rick/.local/bin/rick-apps",
+            "list"
+        ]
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var apps = []
+                var output = this.text.trim()
+
+                if (output.length > 0) {
+                    var lines = output.split("\n")
+
+                    for (var i = 0; i < lines.length; ++i) {
+                        var parts = lines[i].split("|")
+
+                        if (parts.length >= 4) {
+                            apps.push({
+                                key: parts[0],
+                                name: parts[1],
+                                icon: parts[3]
+                            })
+                        }
+                    }
+                }
+
+                root.installedApps = apps
+            }
+        }
+    }
+
     property string netStatus: "Checking..."
     property string btStatus: "..."
     property string volumeStatus: "..."
@@ -99,7 +201,7 @@ ShellRoot {
     Process {
         id: netProc
         command: ["sh", "-c", "nmcli -t -f TYPE,STATE device | awk -F: '$2==\"connected\" { if ($1==\"ethernet\") {print \"Ethernet\"; exit} if ($1==\"wifi\") {print \"Wi-Fi\"; exit} }'"]
-        running: true
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -112,7 +214,7 @@ ShellRoot {
     Process {
         id: btProc
         command: ["sh", "-c", "bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo On || echo Off"]
-        running: true
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: root.btStatus = this.text.trim()
@@ -122,7 +224,7 @@ ShellRoot {
     Process {
         id: volumeProc
         command: ["sh", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{printf \"%.0f%%\", $2*100; if (index($0,\"MUTED\")) printf \" muted\"}'"]
-        running: true
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: root.volumeStatus = this.text.trim()
@@ -134,7 +236,7 @@ ShellRoot {
     Process {
         id: forecastProc
         command: ["/home/rick/.local/bin/rick-weather-detail"]
-        running: true
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -153,6 +255,49 @@ ShellRoot {
         }
     }
 
+    // Draw the bar first, then start background data.
+    Timer {
+        id: taskbarStartupTimer
+        interval: 50
+        running: true
+        repeat: false
+
+        onTriggered: {
+            if (!taskbarPinsProc.running)
+                taskbarPinsProc.running = true
+        }
+    }
+
+    Timer {
+        id: desktopStatusStartupTimer
+        interval: 500
+        running: true
+        repeat: false
+
+        onTriggered: {
+            if (!netProc.running)
+                netProc.running = true
+            if (!btProc.running)
+                btProc.running = true
+            if (!volumeProc.running)
+                volumeProc.running = true
+        }
+    }
+
+    Timer {
+        id: weatherStartupTimer
+        interval: 1500
+        running: true
+        repeat: false
+
+        onTriggered: {
+            if (!forecastProc.running)
+                forecastProc.running = true
+            if (!weatherProc.running)
+                weatherProc.running = true
+        }
+    }
+
     Timer {
         id: weatherCloseTimer
         interval: 500
@@ -167,7 +312,7 @@ ShellRoot {
     Process {
         id: weatherProc
         command: ["sh", "-c", "curl -fsS --max-time 8 'https://wttr.in/Cedar+Falls,Iowa?format=%c%20%t&u'"]
-        running: true
+        running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -223,35 +368,14 @@ ShellRoot {
             onDoubleClicked: bar.solidBar = !bar.solidBar
         }
 
-        Rectangle {
-            id: powerButton
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "⏻"
-                color: "#ffffff"
-                font.pixelSize: 19
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: powerMenu.visible = !powerMenu.visible
-            }
-        }
-
         PopupWindow {
             id: powerMenu
 
             anchor.window: bar
-            anchor.rect.x: powerButton.x
-            anchor.rect.y: -height
+
+            // Place submenu just to the right of the main menu.
+            anchor.rect.x: appMenu.anchor.rect.x + appMenu.width + 8
+            anchor.rect.y: -260
 
             width: 170
             height: 132
@@ -271,8 +395,9 @@ ShellRoot {
             Rectangle {
                 anchors.fill: parent
                 radius: 10
-                color: "#0C2340"
-                border.color: "#7F9695"
+
+                color: "#071426"
+                border.color: "#A855F7"
                 border.width: 1
 
                 Column {
@@ -284,68 +409,96 @@ ShellRoot {
                         width: 154
                         height: 35
                         radius: 6
-                        color: logoutMouse.containsMouse ? "#1f3d63" : "transparent"
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "Log Out"
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-
-                        MouseArea {
-                            id: logoutMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                powerMenu.visible = false
-                                Quickshell.execDetached(["/home/rick/.local/bin/rick-logout"])
-                            }
-                        }
-                    }
-                    Rectangle {
-                        width: 154
-                        height: 35
-                        radius: 6
-                        color: poweroffMouse.containsMouse ? "#1f3d63" : "transparent"
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "Power Off"
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-
-                        MouseArea {
-                            id: poweroffMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                powerMenu.visible = false
-                                Quickshell.execDetached(["systemctl", "poweroff"])
-                            }
-                        }
-                    }
-                    Rectangle {
-                        width: 154
-                        height: 35
-                        radius: 6
-                        color: rebootMouse.containsMouse ? "#1f3d63" : "transparent"
+                        color: rebootMouse.containsMouse
+                            ? "#003594"
+                            : "transparent"
 
                         Text {
                             anchors.centerIn: parent
                             text: "Reboot"
-                            color: "white"
+                            color: "#35D9FF"
                             font.pixelSize: 14
+                            font.bold: true
                         }
 
                         MouseArea {
                             id: rebootMouse
                             anchors.fill: parent
                             hoverEnabled: true
+
                             onClicked: {
                                 powerMenu.visible = false
-                                Quickshell.execDetached(["systemctl", "reboot"])
+                                appMenu.visible = false
+                                Quickshell.execDetached([
+                                    "systemctl",
+                                    "reboot"
+                                ])
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 154
+                        height: 35
+                        radius: 6
+
+                        color: poweroffMouse.containsMouse
+                            ? "#003594"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Power Off"
+                            color: "#FF4FA3"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: poweroffMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                powerMenu.visible = false
+                                appMenu.visible = false
+                                Quickshell.execDetached([
+                                    "systemctl",
+                                    "poweroff"
+                                ])
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 154
+                        height: 35
+                        radius: 6
+
+                        color: logoutMouse.containsMouse
+                            ? "#003594"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Log Out"
+                            color: "#FFFFFF"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: logoutMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                powerMenu.visible = false
+                                appMenu.visible = false
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-logout"
+                                ])
                             }
                         }
                     }
@@ -355,8 +508,8 @@ ShellRoot {
 
         Image {
             id: ricksLabel
-            anchors.left: powerButton.right
-            anchors.leftMargin: 8
+            anchors.left: parent.left
+            anchors.leftMargin: 10
             anchors.verticalCenter: parent.verticalCenter
 
             width: 30
@@ -371,122 +524,128 @@ ShellRoot {
             }
         }
 
-        Rectangle {
-            id: pcmanfmButton
+        Row {
+            id: pinnedAppsRow
+
             anchors.left: ricksLabel.right
             anchors.leftMargin: 10
             anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
 
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/pcmanfm.svg"
-                fillMode: Image.PreserveAspectFit
-            }
+            spacing: 6
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-files"])
-            }
-        }
+            Repeater {
+                model: root.taskbarPins
 
-                Rectangle {
-            id: terminalButton
-            anchors.left: pcmanfmButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
+                delegate: Rectangle {
+                    required property var modelData
 
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/terminal.svg"
-                fillMode: Image.PreserveAspectFit
-            }
+                    width: 42
+                    height: 32
+                    radius: 8
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["xfce4-terminal", "--hide-scrollbar"])
-            }
-        }
+                    color: pinMouse.containsMouse
+                        ? "#25364d"
+                        : "transparent"
 
-Rectangle {
-            id: chatgptButton
-            anchors.left: chromeButton.right
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
+                    Image {
+                        anchors.centerIn: parent
 
-            Image {
-                anchors.centerIn: parent
-                width: 22
-                height: 22
-                source: "file:///home/rick/.config/quickshell/rick/icons/chatgpt.png"
-                    fillMode: Image.PreserveAspectFit
+                        width: modelData.size
+                        height: modelData.size
+
+                        source: modelData.icon.length > 0
+                            ? (modelData.icon.startsWith("/")
+                                ? "file://" + modelData.icon
+                                : modelData.icon)
+                            : ""
+
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                    }
+
+                    Process {
+                        id: taskbarRemoveProc
+                        running: false
+
+                        onExited: {
+                            root.refreshTaskbarPins()
+                        }
+                    }
+
+                    MouseArea {
+                        id: pinMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+
+                        acceptedButtons:
+                            Qt.LeftButton |
+                            Qt.RightButton
+
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.RightButton) {
+                                taskbarContextMenu.visible =
+                                    !taskbarContextMenu.visible
+                            } else {
+                                taskbarContextMenu.visible = false
+
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-taskbar-pins",
+                                    "run",
+                                    modelData.key
+                                ])
+                            }
+                        }
+                    }
+
+                    PopupWindow {
+                        id: taskbarContextMenu
+
+                        anchor.window: bar
+                        anchor.rect.x:
+                            pinnedAppsRow.x + parent.x - 54
+                        anchor.rect.y: -implicitHeight - 4
+
+                        implicitWidth: 150
+                        implicitHeight: 34
+
+                        visible: false
+                        color: "transparent"
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 8
+
+                            color: "#041E42"
+                            border.color: "#869397"
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+
+                                text: "Remove from Taskbar"
+                                color: "#FFFFFF"
+                                font.pixelSize: 10
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+
+                                onClicked: {
+                                    taskbarRemoveProc.command = [
+                                        "/home/rick/.local/bin/rick-taskbar-pins",
+                                        "remove",
+                                        modelData.key
+                                    ]
+
+                                    taskbarContextMenu.visible = false
+                                    taskbarRemoveProc.running = true
+                                }
+                            }
+                        }
+                    }
                 }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-chatgpt"])
-                }
-            }
-
-        Rectangle {
-            id: chromeButton
-            anchors.left: terminalButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/chrome.png"
-                fillMode: Image.PreserveAspectFit
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-chrome"])
-            }
-        }
-
-        Rectangle {
-            anchors.left: chatgptButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/steam.png"
-                fillMode: Image.PreserveAspectFit
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-steam"])
             }
         }
 
@@ -526,17 +685,12 @@ Rectangle {
 
                 onClicked: {
                     weatherCloseTimer.stop()
+                    weatherPopup.pinned = false
+                    weatherPopup.visible = false
 
-                    if (weatherPopup.pinned) {
-                        weatherPopup.pinned = false
-                        weatherPopup.visible = false
-                    } else {
-                        weatherPopup.pinned = true
-                        weatherPopup.visible = true
-
-                        if (!forecastProc.running)
-                            forecastProc.running = true
-                    }
+                    Quickshell.execDetached([
+                        "/home/rick/.local/bin/rick-weather-app"
+                    ])
                 }
             }
         }
@@ -1236,7 +1390,7 @@ Rectangle {
                 command: [
                     "bash",
                     "-lc",
-                    "{ checkupdates 2>/dev/null || true; yay -Qua 2>/dev/null || true; } | sed '/^$/d' | wc -l"
+                    "$HOME/.local/bin/rick-update-count"
                 ]
 
                 running: true
@@ -1304,7 +1458,7 @@ Rectangle {
                             "-x",
                             "bash",
                             "-lc",
-                            "yay -Syu; rc=$?; echo; if [ $rc -eq 0 ]; then echo 'Updates finished.'; else echo 'Update returned an error.'; fi; echo; echo 'This window will close in 5 seconds...'; sleep 5; exit $rc"
+                            "$HOME/.local/bin/rick-update-install; rc=$?; echo; if [ $rc -eq 0 ]; then echo 'Updates finished.'; else echo 'Update returned an error.'; fi; echo; echo 'This window will close in 5 seconds...'; sleep 5; exit $rc"
                         ])
 
                         updateAfterClickTimer.restart()
@@ -1452,6 +1606,8 @@ Rectangle {
 
             onVisibleChanged: {
                 if (visible) {
+                    root.refreshInstalledApps()
+
                     Qt.callLater(function() {
                         appMenuGrab.active = true
                     })
@@ -1465,10 +1621,26 @@ Rectangle {
             Rectangle {
                 anchors.fill: parent
                 radius: 12
+                clip: true
                 color: "#0C2340"
 
                 border.color: "#869397"
                 border.width: 1
+
+                Image {
+                    anchors.fill: parent
+
+                    source: "file:///home/rick/.config/quickshell/rick/wallpapers/menu-wallpaper.png"
+
+                    fillMode: Image.PreserveAspectCrop
+                    smooth: true
+                    opacity: 0.72
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Qt.rgba(0.01, 0.05, 0.12, 0.42)
+                }
 
                 Column {
                     anchors.fill: parent
@@ -1476,22 +1648,28 @@ Rectangle {
                     spacing: 10
 
                     Text {
-                        text: "★  RICKS LINUX"
-                        color: "#FFFFFF"
+                        width: parent.width
+                        text: "RASPBERRY PI HYPRLAND ARM64"
+                        color: "#35D9FF"
                         font.pixelSize: 20
                         font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
                     }
 
                     Text {
+                        width: parent.width
                         text: "Raspberry Pi 5 Edition"
-                        color: "#869397"
+                        color: "#FF4FA3"
                         font.pixelSize: 12
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
                     }
 
                     Rectangle {
                         width: parent.width
-                        height: 1
-                        color: "#869397"
+                        height: 2
+                        radius: 1
+                        color: "#A855F7"
                     }
 
                     Row {
@@ -1503,76 +1681,191 @@ Rectangle {
 
                             Text {
                                 text: "APPS"
-                                color: "#869397"
+                                color: "#35D9FF"
                                 font.pixelSize: 12
                                 font.bold: true
                             }
 
-                            Repeater {
-                                model: [
-                                    {
-                                        name: "Aether",
-                                        cmd: ["aether"]
-                                    },
-                                    {
-                                        name: "Calculator",
-                                        cmd: ["gnome-calculator"]
-                                    },
-                                    {
-                                        name: "ChatGPT",
-                                        cmd: ["/home/rick/.local/bin/rick-chatgpt"]
-                                    },
-                                    {
-                                        name: "Google Chrome",
-                                        cmd: ["/home/rick/.local/bin/rick-chrome"]
-                                    },
-                                    {
-                                        name: "Xfce Terminal",
-                                        cmd: ["xfce4-terminal", "--hide-scrollbar"]
-                                    },
-                                    {
-                                        name: "Xed",
-                                        cmd: ["xed"]
-                                    },
-                                    {
-                                        name: "PCManFM Files",
-                                        cmd: ["/home/rick/.local/bin/rick-files"]
-                                    },
-                                    {
-                                        name: "Steam",
-                                        cmd: ["/home/rick/.local/bin/rick-steam"]
-                                    }
-                                ]
+                            Flickable {
+                                width: 236
+                                height: 430
 
-                                delegate: Rectangle {
-                                    required property var modelData
+                                clip: true
+                                contentWidth: width
+                                contentHeight: appsColumn.height
+
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                Column {
+                                    id: appsColumn
 
                                     width: 236
-                                    height: 42
-                                    radius: 7
+                                    spacing: 5
 
-                                    color: appMouse.containsMouse
-                                        ? "#003594"
-                                        : "#111827"
+                                    Repeater {
+                                        model: root.installedApps
 
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 14
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        delegate: Rectangle {
+                                            required property var modelData
 
-                                        text: modelData.name
-                                        color: "#FFFFFF"
-                                        font.pixelSize: 14
-                                    }
+                                            width: 236
+                                            height: 42
+                                            radius: 7
 
-                                    MouseArea {
-                                        id: appMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
+                                            color: appMouse.containsMouse
+                                                ? "#003594"
+                                                : "#111827"
 
-                                        onClicked: {
-                                            appMenu.visible = false
-                                            Quickshell.execDetached(modelData.cmd)
+                                            Row {
+                                                anchors.fill: parent
+                                                anchors.leftMargin: 10
+                                                anchors.rightMargin: 10
+                                                spacing: 8
+
+                                                Item {
+                                                    width: 26
+                                                    height: 42
+
+                                                    Image {
+                                                        anchors.centerIn: parent
+
+                                                        width: 22
+                                                        height: 22
+
+                                                        visible:
+                                                            modelData.icon.length > 0
+
+                                                        source:
+                                                            modelData.icon.length > 0
+                                                            ? (modelData.icon.startsWith("/")
+                                                                ? "file://" + modelData.icon
+                                                                : modelData.icon)
+                                                            : ""
+
+                                                        fillMode:
+                                                            Image.PreserveAspectFit
+
+                                                        smooth: true
+                                                    }
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+
+                                                        visible:
+                                                            modelData.icon.length === 0
+
+                                                        text:
+                                                            modelData.name.length > 0
+                                                            ? modelData.name.charAt(0)
+                                                            : "•"
+
+                                                        color: "#869397"
+                                                        font.pixelSize: 16
+                                                        font.bold: true
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter:
+                                                        parent.verticalCenter
+
+                                                    width: 175
+
+                                                    text: modelData.name
+                                                    color: "#FFFFFF"
+                                                    font.pixelSize: 13
+
+                                                    elide:
+                                                        Text.ElideRight
+                                                }
+                                            }
+
+                                            Process {
+                                                id: pinToggleProc
+                                                running: false
+
+                                                onExited: {
+                                                    root.refreshTaskbarPins()
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                id: appMouse
+
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+
+                                                acceptedButtons:
+                                                    Qt.LeftButton |
+                                                    Qt.RightButton
+
+                                                onClicked: function(mouse) {
+                                                    if (mouse.button ===
+                                                        Qt.RightButton) {
+                                                        pinContextMenu.visible =
+                                                            !pinContextMenu.visible
+                                                    } else {
+                                                        pinContextMenu.visible = false
+                                                        appMenu.visible = false
+
+                                                        Quickshell.execDetached([
+                                                            "/home/rick/.local/bin/rick-apps",
+                                                            "launch",
+                                                            modelData.key
+                                                        ])
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                id: pinContextMenu
+
+                                                anchors.right: parent.right
+                                                anchors.rightMargin: 5
+                                                anchors.verticalCenter:
+                                                    parent.verticalCenter
+
+                                                width: 145
+                                                height: 34
+                                                radius: 8
+                                                z: 100
+
+                                                visible: false
+
+                                                color: "#041E42"
+                                                border.color: "#869397"
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+
+                                                    text:
+                                                        root.isPinned(modelData.key)
+                                                        ? "Remove from Taskbar"
+                                                        : "Pin to Taskbar"
+
+                                                    color: "#FFFFFF"
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+
+                                                    onClicked: {
+                                                        pinToggleProc.command = [
+                                                            "/home/rick/.local/bin/rick-taskbar-pins",
+                                                            root.isPinned(modelData.key)
+                                                                ? "remove"
+                                                                : "add",
+                                                            modelData.key
+                                                        ]
+
+                                                        pinContextMenu.visible = false
+                                                        pinToggleProc.running = true
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1585,7 +1878,7 @@ Rectangle {
 
                             Text {
                                 text: "SYSTEM"
-                                color: "#869397"
+                                color: "#FF4FA3"
                                 font.pixelSize: 12
                                 font.bold: true
                             }
@@ -1593,32 +1886,38 @@ Rectangle {
                             Repeater {
                                 model: [
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/about.svg",
                                         name: "About Ricks Linux",
                                         cmd: [
                                             "/home/rick/.local/bin/rick-about"
                                         ]
                                     },
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/bluetooth.svg",
                                         name: "Bluetooth",
                                         cmd: [
                                             "/home/rick/.local/bin/rick-bluetooth"
                                         ]
                                     },
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/network.svg",
                                         name: "Network",
                                         cmd: ["nm-connection-editor"]
                                     },
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/printer.svg",
                                         name: "Printer Settings",
                                         cmd: ["system-config-printer"]
                                     },
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/volume.svg",
                                         name: "Volume",
                                         cmd: [
                                             "/home/rick/.local/bin/rick-volume"
                                         ]
                                     },
                                     {
+                                        icon: "file:///home/rick/.config/quickshell/rick/icons/system/power.svg",
                                         name: "Power",
                                         action: "power"
                                     }
@@ -1635,14 +1934,26 @@ Rectangle {
                                         ? "#003594"
                                         : "#111827"
 
-                                    Text {
+                                    Row {
                                         anchors.left: parent.left
-                                        anchors.leftMargin: 14
+                                        anchors.leftMargin: 12
                                         anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
 
-                                        text: modelData.name
-                                        color: "#FFFFFF"
-                                        font.pixelSize: 14
+                                        Image {
+                                            width: 22
+                                            height: 22
+                                            source: modelData.icon
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                        }
+
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: modelData.name
+                                            color: "#FFFFFF"
+                                            font.pixelSize: 14
+                                        }
                                     }
 
                                     MouseArea {
@@ -1651,11 +1962,12 @@ Rectangle {
                                         hoverEnabled: true
 
                                         onClicked: {
-                                            appMenu.visible = false
-
                                             if (modelData.action === "power") {
-                                                powerMenu.visible = true
+                                                powerMenu.visible =
+                                                    !powerMenu.visible
                                             } else {
+                                                powerMenu.visible = false
+                                                appMenu.visible = false
                                                 Quickshell.execDetached(modelData.cmd)
                                             }
                                         }

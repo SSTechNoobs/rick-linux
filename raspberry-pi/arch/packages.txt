@@ -1,6 +1,5 @@
 base-devel
 sudo
-openssh
 curl
 wget
 git
@@ -43,14 +42,15 @@ gnome-calculator
 cups
 cups-pk-helper
 system-config-printer
-avahi
 nss-mdns
 fastfetch
+nano
 less
 xdg-user-dirs
 mako
 libnotify
 pacman-contrib
+zram-generator
 gtk3
 libcups
 libxss
@@ -58,7 +58,5 @@ libxtst
 nss
 ttf-liberation
 xdg-utils
-plymouth
 xfce4-terminal
 pipewire-jack
-wayvnc

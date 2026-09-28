@@ -3,6 +3,9 @@ set -Eeuo pipefail
 
 source /root/ricks-build.env
 
+# All Ricks Hyprland Raspberry Pi systems use the same visible hostname.
+RICK_HOSTNAME="hyprland-arm64"
+
 REPO=/opt/rick-linux
 HOME_DIR="/home/$RICK_USER"
 PACKAGE_FILE="$REPO/raspberry-pi/arch/packages.txt"
@@ -80,7 +83,7 @@ done
 
 # Avoid generic x86-oriented hooks in the Pi initramfs.
 sed -i \
-    's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms plymouth block filesystems fsck)/' \
+    's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms block filesystems fsck)/' \
     /etc/mkinitcpio.conf
 
 pacman --disable-sandbox -S \
@@ -115,35 +118,13 @@ pacman --disable-sandbox -S \
     "${PACKAGES[@]}"
 
 # ------------------------------------------------------------
-# Raspberry Pi Plymouth boot / shutdown theme
-# ------------------------------------------------------------
-
-info "Installing Ricks Hyprland Raspberry Pi boot splash..."
-
-PLYMOUTH_THEME="/usr/share/plymouth/themes/ricks-linux"
-
-install -d "$PLYMOUTH_THEME"
-
-install -m 0644     "$REPO/configs/plymouth/ricks-linux/ricks-linux.plymouth"     "$PLYMOUTH_THEME/ricks-linux.plymouth"
-
-install -m 0644     "$REPO/configs/plymouth/ricks-linux/ricks-linux.script"     "$PLYMOUTH_THEME/ricks-linux.script"
-
-install -m 0644     "$REPO/raspberry-pi/theme/splash/boot.png"     "$PLYMOUTH_THEME/boot.png"
-
-install -m 0644     "$REPO/raspberry-pi/theme/splash/shutdown.png"     "$PLYMOUTH_THEME/shutdown.png"
-
-plymouth-set-default-theme ricks-linux
-
-mkinitcpio -P
-
-# ------------------------------------------------------------
 # Pi boot configuration
 # ------------------------------------------------------------
 
 info "Configuring Raspberry Pi 5 boot..."
 
 cat > /boot/cmdline.txt <<'EOF_CMDLINE'
-root=LABEL=ROOT rw rootwait rootfstype=ext4 quiet splash loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0 fsck.repair=yes
+root=LABEL=ROOT rw rootwait rootfstype=ext4 quiet loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0 fsck.repair=yes
 EOF_CMDLINE
 
 cat > /etc/fstab <<'EOF_FSTAB'
@@ -190,7 +171,7 @@ done
 install -d -m 0750 /etc/sudoers.d
 
 cat > /etc/sudoers.d/10-wheel <<'EOF_SUDO'
-%wheel ALL=(ALL:ALL) ALL
+%wheel ALL=(ALL:ALL) NOPASSWD: ALL
 EOF_SUDO
 
 chmod 0440 /etc/sudoers.d/10-wheel
@@ -216,9 +197,86 @@ systemctl disable \
 systemctl enable \
     NetworkManager.service \
     bluetooth.service \
+    cups.socket
+
+systemctl disable \
+    NetworkManager-wait-online.service \
     cups.service \
+    cups.path \
+    2>/dev/null || true
+
+systemctl mask \
+    sshd.service \
     avahi-daemon.service \
-    sshd.service
+    avahi-daemon.socket \
+    2>/dev/null || true
+
+# ------------------------------------------------------------
+# Ricks Raspberry Pi performance tuning
+# ------------------------------------------------------------
+
+info "Applying Raspberry Pi performance tuning..."
+
+# 4 GB compressed RAM swap.
+cat > /etc/systemd/zram-generator.conf <<'EOF_ZRAM'
+[zram0]
+zram-size = 4096
+compression-algorithm = zstd
+swap-priority = 100
+EOF_ZRAM
+
+# Prefer compressed RAM swap and avoid unnecessary swap read-ahead.
+cat > /etc/sysctl.d/99-ricks-performance.conf <<'EOF_SYSCTL'
+vm.swappiness=100
+vm.page-cluster=0
+EOF_SYSCTL
+
+# Keep the system journal in RAM to reduce SD-card writes.
+install -d /etc/systemd/journald.conf.d
+
+cat > /etc/systemd/journald.conf.d/99-ricks-performance.conf <<'EOF_JOURNAL'
+[Journal]
+Storage=volatile
+RuntimeMaxUse=64M
+EOF_JOURNAL
+
+rm -rf /var/log/journal
+
+# Run all Pi CPU cores with the performance governor.
+cat > /usr/local/bin/ricks-performance-governor <<'EOF_GOVERNOR'
+#!/usr/bin/env bash
+for governor in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor; do
+    [[ -e "$governor" ]] || continue
+    echo performance > "$governor"
+done
+EOF_GOVERNOR
+
+chmod 0755 /usr/local/bin/ricks-performance-governor
+
+cat > /etc/systemd/system/ricks-performance-governor.service <<'EOF_GOVERNOR_SERVICE'
+[Unit]
+Description=Ricks Raspberry Pi CPU Performance Governor
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ricks-performance-governor
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF_GOVERNOR_SERVICE
+
+systemctl enable ricks-performance-governor.service
+
+# Chrome should exit when its windows close instead of staying in RAM.
+install -d /etc/opt/chrome/policies/managed
+
+cat > /etc/opt/chrome/policies/managed/ricks-performance.json <<'EOF_CHROME_POLICY'
+{
+  "BackgroundModeEnabled": false
+}
+EOF_CHROME_POLICY
 
 # ------------------------------------------------------------
 # NetworkManager Wi-Fi
@@ -268,7 +326,9 @@ install -d \
     -o "$RICK_USER" \
     -g "$RICK_USER" \
     "$HOME_DIR/.config/hypr" \
+    "$HOME_DIR/.config/libfm" \
     "$HOME_DIR/.config/quickshell" \
+    "$HOME_DIR/.local/share/applications" \
     "$HOME_DIR/.config/aether/custom/ricks-wallpaper" \
     "$HOME_DIR/.config/systemd/user" \
     "$HOME_DIR/.local/bin" \
@@ -276,7 +336,6 @@ install -d \
     "$HOME_DIR/Documents" \
     "$HOME_DIR/Downloads" \
     "$HOME_DIR/Music" \
-    "$HOME_DIR/Pictures/RicksLinuxSplash" \
     "$HOME_DIR/Pictures/RicksLinuxWallpaper" \
     "$HOME_DIR/Videos"
 
@@ -292,93 +351,28 @@ cp -a \
     "$REPO/configs/quickshell/rick" \
     "$HOME_DIR/.config/quickshell/"
 
-PI_QML="$HOME_DIR/.config/quickshell/rick/shell.qml"
+# The repository contains the exact tested Raspberry Pi Quickshell
+# configuration and assets. Do not rewrite shell.qml after copying it.
 
-python3 - "$PI_QML" "$HOME_DIR" <<'PY_QML'
-from pathlib import Path
-import sys
+# ------------------------------------------------------------
+# PCManFM
+# ------------------------------------------------------------
 
-path = Path(sys.argv[1])
-home = sys.argv[2]
-text = path.read_text()
+install -m 0644 \
+    "$REPO/configs/libfm/libfm.conf" \
+    "$HOME_DIR/.config/libfm/libfm.conf"
 
-old_count = (
-    "{ checkupdates 2>/dev/null || true; "
-    "yay -Qua 2>/dev/null || true; } | "
-    "sed '/^$/d' | wc -l"
-)
+# ------------------------------------------------------------
+# Ricks application launchers
+# ------------------------------------------------------------
 
-text = text.replace(
-    old_count,
-    "$HOME/.local/bin/rick-update-count"
-)
+install -m 0644 \
+    "$REPO/configs/applications/rick-aether.desktop" \
+    "$HOME_DIR/.local/share/applications/rick-aether.desktop"
 
-old_update = (
-    "yay -Syu; rc=$?; echo; "
-    "if [ $rc -eq 0 ]; then echo 'Updates finished.'; "
-    "else echo 'Update returned an error.'; fi; echo; "
-    "echo 'This window will close in 5 seconds...'; "
-    "sleep 5; exit $rc"
-)
-
-new_update = (
-    "$HOME/.local/bin/rick-update-install; rc=$?; echo; "
-    "if [ $rc -eq 0 ]; then echo 'Updates finished.'; "
-    "else echo 'Update returned an error.'; fi; echo; "
-    "echo 'This window will close in 5 seconds...'; "
-    "sleep 5; exit $rc"
-)
-
-text = text.replace(old_update, new_update)
-
-steam_button = """        Rectangle {
-            anchors.left: chatgptButton.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: 42
-            height: 32
-            radius: 8
-            color: "transparent"
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/rick/.config/quickshell/rick/icons/steam.png"
-                fillMode: Image.PreserveAspectFit
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-steam"])
-            }
-        }
-
-"""
-
-steam_menu = """                                    {
-                                        name: "Steam",
-                                        cmd: ["/home/rick/.local/bin/rick-steam"]
-                                    }
-"""
-
-text = text.replace(steam_button, "")
-text = text.replace(steam_menu, "")
-
-text = text.replace(
-    'name: "Xed",\n'
-    '                                        cmd: ["xed"]',
-    'name: "Mousepad",\n'
-    '                                        cmd: ["mousepad"]'
-)
-
-text = text.replace("/home/rick", home)
-
-path.write_text(text)
-PY_QML
-
-rm -f \
-    "$HOME_DIR/.config/quickshell/rick/icons/steam.png"
+install -m 0644 \
+    "$REPO/configs/applications/rick-chatgpt.desktop" \
+    "$HOME_DIR/.local/share/applications/rick-chatgpt.desktop"
 
 # ------------------------------------------------------------
 # Hyprland
@@ -406,16 +400,12 @@ sed -i \
     "$HOME_DIR/.config/hypr/hyprland.lua"
 
 # ------------------------------------------------------------
-# Wallpaper / splash / Aether profile
+# Wallpaper / Aether profile
 # ------------------------------------------------------------
 
 install -m 0644 \
     "$REPO/raspberry-pi/theme/wallpaper.png" \
     "$HOME_DIR/Pictures/RicksLinuxWallpaper/wallpaper.png"
-
-cp -a \
-    "$REPO/raspberry-pi/theme/splash/." \
-    "$HOME_DIR/Pictures/RicksLinuxSplash/"
 
 cp -a \
     "$REPO/configs/aether/custom/ricks-wallpaper/." \
@@ -428,8 +418,6 @@ cp -a \
 cp -a \
     "$REPO/scripts/user/." \
     "$HOME_DIR/.local/bin/"
-
-rm -f "$HOME_DIR/.local/bin/rick-steam"
 
 chmod +x "$HOME_DIR/.local/bin/"*
 
@@ -583,100 +571,11 @@ fi
 
 
 # ------------------------------------------------------------
-# Secure browser remote desktop
-# ------------------------------------------------------------
-
-info "Installing Ricks Hyprland browser remote desktop..."
-
-install -d -m 0700 \
-    "$HOME_DIR/.config/rick-remote"
-
-install -d -m 0755 \
-    "$HOME_DIR/.local/share" \
-    "$HOME_DIR/.local/lib/rick-remote"
-
-rm -rf \
-    "$HOME_DIR/.local/share/novnc"
-
-git clone \
-    --depth 1 \
-    --branch v1.7.0 \
-    https://github.com/novnc/noVNC.git \
-    "$HOME_DIR/.local/share/novnc"
-
-git clone \
-    --depth 1 \
-    https://github.com/novnc/websockify.git \
-    "$HOME_DIR/.local/share/novnc/utils/websockify"
-
-# Ricks Hyprland uses a software pointer dot because WayVNC does
-# not provide a visible cursor image to noVNC.
-sed -i \
-    "s/UI.initSetting('show_dot', false);/UI.initSetting('show_dot', true);/" \
-    "$HOME_DIR/.local/share/novnc/app/ui.js"
-
-printf '%s' "$RICK_REMOTE_AUTH_B64" |
-    base64 -d \
-    > "$HOME_DIR/.config/rick-remote/auth.json"
-
-chmod 0600 \
-    "$HOME_DIR/.config/rick-remote/auth.json"
-
-install -m 0644 \
-    "$REPO/raspberry-pi/remote/rick_web_auth.py" \
-    "$HOME_DIR/.local/lib/rick-remote/rick_web_auth.py"
-
-install -m 0755 \
-    "$REPO/raspberry-pi/remote/rick-remote-prepare" \
-    "$HOME_DIR/.local/bin/rick-remote-prepare"
-
-install -m 0644 \
-    "$REPO/raspberry-pi/systemd/user/rick-wayvnc.service" \
-    "$HOME_DIR/.config/systemd/user/rick-wayvnc.service"
-
-install -m 0644 \
-    "$REPO/raspberry-pi/systemd/user/rick-novnc.service" \
-    "$HOME_DIR/.config/systemd/user/rick-novnc.service"
-
-rm -rf \
-    "$HOME_DIR/.local/share/novnc/.git" \
-    "$HOME_DIR/.local/share/novnc/utils/websockify/.git"
-
-# ------------------------------------------------------------
 # Session startup
 # ------------------------------------------------------------
 
-cat > "$HOME_DIR/.local/bin/rick-session-start" <<'EOF_SESSION'
-#!/usr/bin/env bash
-
-systemctl --user import-environment \
-    WAYLAND_DISPLAY \
-    DISPLAY \
-    XDG_CURRENT_DESKTOP \
-    HYPRLAND_INSTANCE_SIGNATURE \
-    >/dev/null 2>&1 || true
-
-systemctl --user start mako.service \
-    >/dev/null 2>&1 || true
-
-systemctl --user start hyprpolkitagent.service \
-    >/dev/null 2>&1 || true
-
-pgrep -x nm-applet >/dev/null 2>&1 || \
-    setsid -f nm-applet --indicator \
-    >/dev/null 2>&1
-
-
-systemctl --user start \
-    rick-wayvnc.service \
-    rick-novnc.service \
-    >/dev/null 2>&1 || true
-
-"$HOME/.local/bin/rick-wallpaper-apply"
-EOF_SESSION
-
-chmod 0755 \
-    "$HOME_DIR/.local/bin/rick-session-start"
+# The exact tested Raspberry Pi session startup script is installed
+# with the shared helpers from scripts/user/rick-session-start.
 
 # ------------------------------------------------------------
 # Weekly update notification
@@ -719,6 +618,11 @@ EOF_XDG
 install -d \
     /etc/systemd/system/getty@tty1.service.d
 
+cat > /etc/systemd/system/getty@tty1.service.d/10-fast-start.conf <<'EOF_FAST_GETTY'
+[Service]
+Type=simple
+EOF_FAST_GETTY
+
 cat > \
     /etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF_AUTOLOGIN
 [Service]
@@ -732,6 +636,12 @@ if [ -z "${WAYLAND_DISPLAY:-}" ] &&
     exec start-hyprland
 fi
 EOF_PROFILE
+
+cat >> "$HOME_DIR/.bashrc" <<'EOF_BASHRC'
+
+# Ricks Hyprland ARM64 terminal prompt
+PS1='[ricks@hyprland-arm64 \W]\$ '
+EOF_BASHRC
 
 # ------------------------------------------------------------
 # Branding
@@ -756,6 +666,15 @@ date --iso-8601=seconds \
 chown -R \
     "$RICK_USER:$RICK_USER" \
     "$HOME_DIR"
+
+# ------------------------------------------------------------
+# Unique machine identity
+# ------------------------------------------------------------
+
+# Leave machine-id empty in the master image. systemd generates a unique
+# identity the first time each physical Raspberry Pi boots.
+: > /etc/machine-id
+rm -f /var/lib/dbus/machine-id
 
 # ------------------------------------------------------------
 # Final check

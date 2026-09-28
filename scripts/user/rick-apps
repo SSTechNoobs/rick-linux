@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+import os
+import subprocess
+import sys
+
+APP_DIRS = [
+    Path.home() / ".local/share/applications",
+    Path("/usr/share/applications"),
+]
+
+ICON_DIRS = [
+    Path.home() / ".local/share/icons",
+    Path.home() / ".icons",
+    Path("/usr/share/icons/hicolor"),
+    Path("/usr/share/icons/Adwaita"),
+    Path("/usr/share/icons/AdwaitaLegacy"),
+    Path("/usr/share/pixmaps"),
+]
+
+
+def read_desktop(path):
+    data = {}
+    inside = False
+
+    try:
+        for raw in path.read_text(errors="ignore").splitlines():
+            line = raw.strip()
+
+            if line == "[Desktop Entry]":
+                inside = True
+                continue
+
+            if line.startswith("[") and line.endswith("]"):
+                if inside:
+                    break
+                continue
+
+            if not inside or "=" not in line or line.startswith("#"):
+                continue
+
+            key, value = line.split("=", 1)
+
+            # Use the normal, non-localized fields.
+            if "[" not in key:
+                data[key] = value
+
+    except Exception:
+        return {}
+
+    return data
+
+
+def truthy(value):
+    return value.lower() in ("1", "true", "yes")
+
+
+def clean(value):
+    return value.replace("|", " ").replace("\n", " ").strip()
+
+
+def find_icon(icon):
+    if not icon:
+        return ""
+
+    p = Path(icon)
+
+    if p.is_absolute() and p.exists():
+        return str(p)
+
+    names = []
+
+    if Path(icon).suffix.lower() in (".png", ".svg", ".xpm"):
+        names.append(icon)
+    else:
+        names += [icon + ".svg", icon + ".png", icon + ".xpm"]
+
+    preferred = [
+        Path("/usr/share/icons/hicolor/512x512/apps"),
+        Path("/usr/share/icons/hicolor/256x256/apps"),
+        Path("/usr/share/icons/hicolor/128x128/apps"),
+        Path("/usr/share/icons/hicolor/64x64/apps"),
+        Path("/usr/share/icons/hicolor/48x48/apps"),
+        Path("/usr/share/icons/hicolor/scalable/apps"),
+        Path("/usr/share/pixmaps"),
+    ]
+
+    for directory in preferred:
+        for name in names:
+            candidate = directory / name
+            if candidate.exists():
+                return str(candidate)
+
+    for base in ICON_DIRS:
+        if not base.exists():
+            continue
+
+        for name in names:
+            try:
+                for candidate in base.rglob(name):
+                    return str(candidate)
+            except Exception:
+                pass
+
+    return ""
+
+
+def applications():
+    found = {}
+
+    # Helper/system launchers that should not appear in
+    # the normal RICKS LINUX application menu.
+    hidden_desktop_ids = {
+        "xfce4-about.desktop",
+        "nm-connection-editor.desktop",
+        "bssh.desktop",
+        "bvnc.desktop",
+        "avahi-discover.desktop",
+        "blueman-adapters.desktop",
+        "pcmanfm-desktop-pref.desktop",
+        "lstopo.desktop",
+        "cups.desktop",
+        "libfm-pref-apps.desktop",
+        "qv4l2.desktop",
+        "qvidcap.desktop",
+        "system-config-printer.desktop",
+        "org.pulseaudio.pavucontrol.desktop",
+    }
+
+    # ~/.local entries override system entries with the same desktop ID.
+    for directory in APP_DIRS:
+        if not directory.exists():
+            continue
+
+        for path in sorted(directory.glob("*.desktop")):
+            desktop_id = path.name
+
+            if desktop_id in hidden_desktop_ids:
+                continue
+
+            if desktop_id in found:
+                continue
+
+            data = read_desktop(path)
+
+            if not data:
+                continue
+
+            if data.get("Type", "Application") != "Application":
+                continue
+
+            if truthy(data.get("Hidden", "false")):
+                continue
+
+            if truthy(data.get("NoDisplay", "false")):
+                continue
+
+            name = data.get("Name", "").strip()
+            exec_line = data.get("Exec", "").strip()
+
+            if not name or not exec_line:
+                continue
+
+            found[desktop_id] = {
+                "id": desktop_id,
+                "name": name,
+                "icon": find_icon(data.get("Icon", "").strip()),
+                "path": str(path),
+            }
+
+    # Do not show duplicate visible names.
+    unique = {}
+
+    for app in found.values():
+        key = app["name"].casefold()
+        if key not in unique:
+            unique[key] = app
+
+    return sorted(unique.values(), key=lambda app: app["name"].casefold())
+
+
+def main():
+    command = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+    if command == "list":
+        for app in applications():
+            print(
+                f'{clean(app["id"])}|'
+                f'{clean(app["name"])}|'
+                f'{clean(app["path"])}|'
+                f'{clean(app["icon"])}'
+            )
+        return
+
+    if command == "launch":
+        if len(sys.argv) != 3:
+            raise SystemExit("usage: rick-apps launch DESKTOP_ID")
+
+        wanted = sys.argv[2]
+
+        for app in applications():
+            if app["id"] == wanted:
+                subprocess.Popen(
+                    ["gio", "launch", app["path"]],
+                    start_new_session=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+
+        raise SystemExit(f"Application not found: {wanted}")
+
+    raise SystemExit("usage: rick-apps {list|launch DESKTOP_ID}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Aether
+Comment=Aether
+Exec=/usr/local/bin/aether
+Icon=/home/rick/.config/quickshell/rick/icons/arch-bar.svg
+Terminal=false
+StartupNotify=true
+Categories=Utility;

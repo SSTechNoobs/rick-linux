@@ -23,9 +23,9 @@ while sleep 2; do
             initialized=1
             screen_was_ready=1
 
-            if ! pgrep -x qs >/dev/null ||
-               ! hyprctl layers 2>/dev/null |
-                   grep -q 'namespace: quickshell'; then
+            # During initial desktop startup, Quickshell may already
+            # be running before its layer appears. Do not kill it.
+            if ! pgrep -x qs >/dev/null; then
                 restart_bar
             fi
 

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+systemctl --user import-environment \
+    WAYLAND_DISPLAY \
+    DISPLAY \
+    XDG_CURRENT_DESKTOP \
+    HYPRLAND_INSTANCE_SIGNATURE \
+    >/dev/null 2>&1 || true
+
+# Start desktop services without making startup wait on them.
+systemctl --user start --no-block \
+    mako.service \
+    hyprpolkitagent.service \
+    >/dev/null 2>&1 || true
+
+pgrep -x nm-applet >/dev/null 2>&1 || \
+    setsid -f nm-applet --indicator \
+    >/dev/null 2>&1
+
+# Keep the Quickshell recovery watchdog running.
+if ! pgrep -f "$HOME/.local/bin/rick-bar-watchdog" >/dev/null; then
+    nohup "$HOME/.local/bin/rick-bar-watchdog" \
+        >/tmp/rick-bar-watchdog.log 2>&1 &
+fi
+
+# Apply the normal wallpaper once.
+"$HOME/.local/bin/rick-wallpaper-apply" \
+    >/dev/null 2>&1 &

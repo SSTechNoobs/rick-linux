@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+import os
+import subprocess
+import sys
+
+HOME = Path.home()
+
+CONFIG = HOME / ".config/ricks-hyprland/taskbar-pins"
+RICK_APPS = HOME / ".local/bin/rick-apps"
+
+CONFIG.parent.mkdir(parents=True, exist_ok=True)
+CONFIG.touch(exist_ok=True)
+
+CUSTOM_RUNNERS = {
+    "rick-chatgpt.desktop": HOME / ".local/bin/rick-chatgpt",
+    "google-chrome.desktop": HOME / ".local/bin/rick-chrome",
+    "pcmanfm.desktop": HOME / ".local/bin/rick-files",
+}
+
+CUSTOM_ICONS = {
+    "rick-chatgpt.desktop":
+        HOME / ".config/quickshell/rick/icons/chatgpt.png",
+
+    "google-chrome.desktop":
+        HOME / ".config/quickshell/rick/icons/chrome.png",
+}
+
+
+def app_database():
+    result = subprocess.run(
+        [str(RICK_APPS), "list"],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+
+    apps = {}
+
+    for line in result.stdout.splitlines():
+        parts = line.split("|", 3)
+
+        if len(parts) != 4:
+            continue
+
+        desktop_id, name, path, icon = parts
+
+        custom_icon = CUSTOM_ICONS.get(desktop_id)
+
+        if custom_icon and custom_icon.exists():
+            icon = str(custom_icon)
+
+        apps[desktop_id] = {
+            "name": name,
+            "path": path,
+            "icon": icon,
+        }
+
+    return apps
+
+
+def read_pins():
+    pins = []
+    seen = set()
+
+    for line in CONFIG.read_text().splitlines():
+        key = line.strip()
+
+        if key and key not in seen:
+            seen.add(key)
+            pins.append(key)
+
+    return pins
+
+
+def write_pins(pins):
+    CONFIG.write_text(
+        "".join(pin + "\n" for pin in pins)
+    )
+
+
+def add_pin(key):
+    apps = app_database()
+
+    if key not in apps:
+        raise SystemExit(
+            f"Unknown application: {key}"
+        )
+
+    pins = read_pins()
+
+    if key not in pins:
+        pins.append(key)
+        write_pins(pins)
+
+
+def remove_pin(key):
+    write_pins([
+        pin for pin in read_pins()
+        if pin != key
+    ])
+
+
+def run_app(key):
+    custom = CUSTOM_RUNNERS.get(key)
+
+    if custom and custom.exists():
+        os.execv(str(custom), [str(custom)])
+
+    os.execv(
+        str(RICK_APPS),
+        [str(RICK_APPS), "launch", key],
+    )
+
+
+def list_pins():
+    apps = app_database()
+
+    for key in read_pins():
+        app = apps.get(key)
+
+        if not app:
+            continue
+
+        size = 22 if key == "rick-chatgpt.desktop" else 24
+
+        print(
+            f'{key}|'
+            f'{app["name"]}|'
+            f'{app["icon"]}|'
+            f'{size}'
+        )
+
+
+def main():
+    command = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+    if command == "list":
+        list_pins()
+        return
+
+    if len(sys.argv) != 3:
+        raise SystemExit(
+            "usage: rick-taskbar-pins "
+            "{list|status|add|remove|toggle|run} DESKTOP_ID"
+        )
+
+    key = sys.argv[2]
+
+    if command == "status":
+        print(
+            "pinned"
+            if key in read_pins()
+            else "unpinned"
+        )
+
+    elif command == "add":
+        add_pin(key)
+
+    elif command == "remove":
+        remove_pin(key)
+
+    elif command == "toggle":
+        if key in read_pins():
+            remove_pin(key)
+            print("removed")
+        else:
+            add_pin(key)
+            print("added")
+
+    elif command == "run":
+        run_app(key)
+
+    else:
+        raise SystemExit("Unknown command")
+
+
+if __name__ == "__main__":
+    main()

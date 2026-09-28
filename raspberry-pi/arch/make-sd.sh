@@ -532,31 +532,14 @@ sudo grep -q \
     "$ROOT_MNT/boot/cmdline.txt" ||
     die "Pi root boot argument is missing."
 
-sudo test -x \
-    "$ROOT_MNT/usr/bin/plymouth" ||
-    die "Plymouth is missing."
+# Ricks Hyprland intentionally boots without Plymouth or a splash screen.
+if sudo grep -qw 'splash' "$ROOT_MNT/boot/cmdline.txt"; then
+    die "Unexpected splash boot argument is present."
+fi
 
-sudo test -f \
-    "$ROOT_MNT/usr/share/plymouth/themes/ricks-linux/ricks-linux.plymouth" ||
-    die "Ricks Hyprland Plymouth theme is missing."
-
-sudo test -f \
-    "$ROOT_MNT/usr/share/plymouth/themes/ricks-linux/boot.png" ||
-    die "Raspberry Pi boot splash is missing."
-
-sudo test -f \
-    "$ROOT_MNT/usr/share/plymouth/themes/ricks-linux/shutdown.png" ||
-    die "Raspberry Pi shutdown splash is missing."
-
-sudo grep -qw \
-    'splash' \
-    "$ROOT_MNT/boot/cmdline.txt" ||
-    die "Plymouth splash boot argument is missing."
-
-sudo grep -q \
-    'kms plymouth' \
-    "$ROOT_MNT/etc/mkinitcpio.conf" ||
-    die "Plymouth mkinitcpio hooks are missing."
+if sudo grep -qw 'plymouth' "$ROOT_MNT/etc/mkinitcpio.conf"; then
+    die "Unexpected Plymouth mkinitcpio hook is present."
+fi
 
 sudo test -x \
     "$ROOT_MNT/usr/bin/Hyprland" ||

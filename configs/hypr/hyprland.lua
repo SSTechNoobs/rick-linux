@@ -229,6 +229,7 @@ hl.config({
         kb_model   = "",
         kb_options = "",
         kb_rules   = "",
+        numlock_by_default = true,
 
         follow_mouse = 1,
 
@@ -386,10 +387,3 @@ hl.config({
         no_update_news = true,
     },
 })
-
-
-
--- Ricks Linux boot transition
-hl.on("hyprland.start", function()
-    hl.exec_cmd("/home/rick/.local/bin/rick-boot-transition")
-end)

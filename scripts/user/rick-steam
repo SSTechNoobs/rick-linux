@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-setsid -f steam >/tmp/rick-steam.log 2>&1

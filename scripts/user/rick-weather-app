@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+exec google-chrome-stable \
+  "https://weather.com/us/iowa/city/cedar-falls/today"
