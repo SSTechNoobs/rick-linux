@@ -277,13 +277,20 @@ cat > "$USER_HOME/.config/hypr/hyprland.conf" <<'EOF_HYPRCONF'
 exec-once = ~/.local/bin/rick-bar-watchdog
 EOF_HYPRCONF
 
-for optional in hyprtoolkit.conf hyprlauncher.conf; do
+for optional in hyprtoolkit.conf hyprlauncher.conf hypridle.conf; do
     if [[ -f "$SOURCE_DIR/configs/hypr/$optional" ]]; then
         install -m 0644 \
             "$SOURCE_DIR/configs/hypr/$optional" \
             "$USER_HOME/.config/hypr/$optional"
     fi
 done
+
+# Adjust user-specific paths in Hypridle configuration.
+if [[ -f "$USER_HOME/.config/hypr/hypridle.conf" ]]; then
+    sed -i \
+        "s#/home/rick#/home/$USERNAME#g" \
+        "$USER_HOME/.config/hypr/hypridle.conf"
+fi
 
 for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
     [[ -f "$helper" ]] || continue
@@ -382,6 +389,10 @@ pgrep -x nm-applet >/dev/null 2>&1 || \
 
 systemctl --user start hyprpolkitagent.service \
     >/dev/null 2>&1 || true
+
+pgrep -x hypridle >/dev/null 2>&1 || \
+    setsid -f hypridle --config "/home/$USERNAME/.config/hypr/hypridle.conf" \
+        >/dev/null 2>&1
 EOF_SESSION
 
 chmod 0755 "$USER_HOME/.local/bin/rick-session-start"
