@@ -1209,6 +1209,31 @@ ShellRoot {
 
             
 
+            Rectangle {
+                width: 42
+                height: 32
+                radius: 8
+                color: tvPowerMouse.containsMouse ? "#1f3d63" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "⏻"
+                    color: root.themeForeground
+                    font.pixelSize: 22
+                }
+
+                MouseArea {
+                    id: tvPowerMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+
+                    onClicked: Quickshell.execDetached([
+                        "/home/rick/.local/bin/rick-tv-power",
+                        "toggle"
+                    ])
+                }
+            }
+
             Text {
                 id: dateText
                 anchors.verticalCenter: parent.verticalCenter

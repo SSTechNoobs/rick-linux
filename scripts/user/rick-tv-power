@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+TV="192.168.6.238"
+
+get_power() {
+    curl -fsS --max-time 3 \
+        "http://$TV:8060/query/device-info" |
+        sed -n 's:.*<power-mode>\(.*\)</power-mode>.*:\1:p'
+}
+
+case "${1:-toggle}" in
+    on)
+        curl -fsS -d '' "http://$TV:8060/keypress/PowerOn" >/dev/null
+        ;;
+    off)
+        curl -fsS -d '' "http://$TV:8060/keypress/PowerOff" >/dev/null
+        ;;
+    status)
+        get_power
+        ;;
+    toggle)
+        STATE="$(get_power)"
+
+        if [ "$STATE" = "PowerOn" ]; then
+            curl -fsS -d '' "http://$TV:8060/keypress/PowerOff" >/dev/null
+        else
+            curl -fsS -d '' "http://$TV:8060/keypress/PowerOn" >/dev/null
+        fi
+        ;;
+esac
