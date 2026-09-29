@@ -399,6 +399,17 @@ hl.window_rule({
     workspace = "2 silent",
 })
 
+-- Rick's AOL Terminal - float above AOL on workspace 2
+hl.window_rule({
+    name = "ricks-aol-terminal",
+    match = {
+        class = "^com[.]mitchellh[.]ghostty$",
+        title = "^Rick's AOL Terminal$",
+    },
+    workspace = "2 silent",
+    float = true,
+})
+
 -- Rick Linux Quickshell
 hl.on("hyprland.start", function()
     hl.exec_cmd("qs -c rick")
