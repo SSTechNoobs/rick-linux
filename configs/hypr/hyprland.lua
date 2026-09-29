@@ -389,6 +389,16 @@ hl.window_rule({
     float = true,
 })
 
+-- Rick's AOL Desktop - always open on workspace 2
+hl.window_rule({
+    name = "ricks-aol-workspace-2",
+    match = {
+        class = "^org[.]quickshell$",
+        title = "^Rick's AOL Desktop$",
+    },
+    workspace = "2 silent",
+})
+
 -- Rick Linux Quickshell
 hl.on("hyprland.start", function()
     hl.exec_cmd("qs -c rick")
