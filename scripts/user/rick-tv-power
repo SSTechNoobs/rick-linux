@@ -8,20 +8,32 @@ get_power() {
         sed -n 's:.*<power-mode>\(.*\)</power-mode>.*:\1:p'
 }
 
+start_wake_watch() {
+    pkill -f '/home/rick/.local/bin/rick-tv-wake-watch' 2>/dev/null || true
+
+    nohup /home/rick/.local/bin/rick-tv-wake-watch \
+        >/tmp/rick-tv-wake-watch.log 2>&1 &
+}
+
 case "${1:-toggle}" in
     on)
         curl -fsS -d '' "http://$TV:8060/keypress/PowerOn" >/dev/null
         ;;
+
     off)
+        start_wake_watch
         curl -fsS -d '' "http://$TV:8060/keypress/PowerOff" >/dev/null
         ;;
+
     status)
         get_power
         ;;
+
     toggle)
         STATE="$(get_power)"
 
         if [ "$STATE" = "PowerOn" ]; then
+            start_wake_watch
             curl -fsS -d '' "http://$TV:8060/keypress/PowerOff" >/dev/null
         else
             curl -fsS -d '' "http://$TV:8060/keypress/PowerOn" >/dev/null
