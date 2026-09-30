@@ -410,6 +410,17 @@ hl.window_rule({
     float = true,
 })
 
+-- Rick's AOL workspace: float normal apps above AOL
+hl.window_rule({
+    name = "ricks-aol-workspace-apps",
+    match = {
+        workspace = "2",
+        class = "negative:^org[.]quickshell$",
+    },
+    float = true,
+    center = true,
+})
+
 -- Rick Linux Quickshell
 hl.on("hyprland.start", function()
     hl.exec_cmd("qs -c rick")
