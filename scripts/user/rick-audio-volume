@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 
-# Ricks Hyprland default audio level.
-for i in {1..20}; do
-    if wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.00 2>/dev/null; then
-        exit 0
-    fi
+# Prefer the TCL 32S357 for Ricks Hyprland audio.
+for attempt in {1..20}; do
+    while read -r id; do
+        [[ "$id" =~ ^[0-9]+$ ]] || continue
+
+        if wpctl inspect "$id" 2>/dev/null |
+           grep -q 'node.nick = "32S357"'; then
+
+            wpctl set-default "$id" 2>/dev/null || true
+            wpctl set-mute "$id" 0 2>/dev/null || true
+            wpctl set-volume "$id" 1.00 2>/dev/null || true
+            exit 0
+        fi
+    done < <(
+        wpctl status |
+        sed -n '/Sinks:/,/Sources:/p' |
+        sed -n 's/.*[ *]\{0,1\}\([0-9][0-9]*\)\..*/\1/p'
+    )
+
     sleep 0.5
 done
 
