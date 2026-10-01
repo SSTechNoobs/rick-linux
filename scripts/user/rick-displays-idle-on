@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Find the LG monitor's current DDC/I2C bus automatically.
+LG_I2C="$(basename "$(readlink -f /sys/class/drm/card*-HDMI-A-1/ddc 2>/dev/null | head -n1)")"
+LG_BUS="${LG_I2C#i2c-}"
+
+if [[ "$LG_BUS" =~ ^[0-9]+$ ]]; then
+    ddcutil --bus "$LG_BUS" setvcp D6 01 \
+      >/dev/null 2>&1 || true
+fi
+
+# TCL Roku TV
+"$HOME/.local/bin/rick-tv-power" on \
+  >/dev/null 2>&1 || true

@@ -1,6 +1,7 @@
 base-devel
 hyprland
 hypridle
+ddcutil
 quickshell
 hyprlauncher
 ghostty
