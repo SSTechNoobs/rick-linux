@@ -304,6 +304,44 @@ def run_app(key):
     )
 
 
+
+def new_window(key):
+    key = canonical(key)
+
+    # Always request a genuinely new window where the app supports it.
+    if key == "pcmanfm.desktop":
+        os.execvp("pcmanfm", ["pcmanfm", "--new-win"])
+
+    if key == "com.mitchellh.ghostty.desktop":
+        os.execvp("ghostty", ["ghostty"])
+
+    if key == "google-chrome.desktop":
+        os.execvp(
+            "google-chrome-stable",
+            ["google-chrome-stable", "--new-window"],
+        )
+
+    if key == "rick-chatgpt.desktop":
+        os.execvp(
+            "google-chrome-stable",
+            [
+                "google-chrome-stable",
+                "--new-window",
+                "--app=https://chatgpt.com",
+            ],
+        )
+
+    # Best effort for other pinned applications.
+    runner = RUNNERS.get(key)
+
+    if runner and runner.exists():
+        os.execv(str(runner), [str(runner)])
+
+    os.execv(
+        str(RICK_APPS),
+        [str(RICK_APPS), "launch", key],
+    )
+
 def main():
     command = sys.argv[1] if len(sys.argv) > 1 else "list"
 
@@ -314,7 +352,7 @@ def main():
     if len(sys.argv) < 3:
         print(
             "usage: rick-taskbar-pins "
-            "{list|status|add|remove|toggle|run} APP",
+            "{list|status|add|remove|toggle|run|new} APP",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -349,6 +387,10 @@ def main():
 
     if command == "run":
         run_app(key)
+        return
+
+    if command == "new":
+        new_window(key)
         return
 
     raise SystemExit(f"Unknown command: {command}")

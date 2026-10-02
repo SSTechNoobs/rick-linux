@@ -248,6 +248,7 @@ ShellRoot {
 
     PanelWindow {
         id: bar
+        screen: Quickshell.screens.find(s => s.name === "HDMI-A-2")
         property bool solidBar: false
 
         anchors {
@@ -458,13 +459,139 @@ ShellRoot {
 
                         anchors.fill: parent
                         hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                        onClicked: {
+                        onPressed: function(mouse) {
+                            if (mouse.button === Qt.RightButton) {
+                                var iconX = pinnedAppsRow.x + parent.x
+
+                                taskbarMenu.appKey = modelData.key
+                                taskbarMenu.appName = modelData.name
+
+                                taskbarMenu.menuX = Math.max(
+                                    10,
+                                    Math.min(
+                                        bar.width - taskbarMenu.width - 10,
+                                        iconX
+                                    )
+                                )
+
+                                taskbarMenu.visible = true
+                            }
+                        }
+
+                        onClicked: function(mouse) {
+                            if (mouse.button !== Qt.LeftButton)
+                                return
+
+                            taskbarMenu.visible = false
+
                             Quickshell.execDetached([
                                 "/home/rick/.local/bin/rick-taskbar-pins",
                                 "run",
                                 modelData.key
                             ])
+                        }
+                    }
+                }
+            }
+        }
+
+        PopupWindow {
+            id: taskbarMenu
+
+            property string appKey: ""
+            property string appName: ""
+            property real menuX: 10
+
+            anchor.window: bar
+            anchor.rect.x: menuX
+            anchor.rect.y: -height
+
+            width: 200
+            height: 86
+            visible: false
+            color: "transparent"
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 10
+                color: root.themeSurface
+                border.color: root.themeMuted
+                border.width: 1
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    spacing: 4
+
+                    Rectangle {
+                        width: 186
+                        height: 34
+                        radius: 6
+
+                        color: newWindowMouse.containsMouse
+                            ? "#1f3d63"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Open New Window"
+                            color: root.themeForeground
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            id: newWindowMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                taskbarMenu.visible = false
+
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-taskbar-pins",
+                                    "new",
+                                    taskbarMenu.appKey
+                                ])
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 186
+                        height: 34
+                        radius: 6
+
+                        color: unpinMouse.containsMouse
+                            ? "#1f3d63"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Unpin from Taskbar"
+                            color: root.themeForeground
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            id: unpinMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                taskbarMenu.visible = false
+
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-taskbar-pins",
+                                    "remove",
+                                    taskbarMenu.appKey
+                                ])
+
+                                Qt.callLater(function() {
+                                    root.refreshTaskbarPins()
+                                })
+                            }
                         }
                     }
                 }
