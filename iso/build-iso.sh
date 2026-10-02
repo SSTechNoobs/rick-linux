@@ -4,7 +4,7 @@ set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 ISO_DIR="$ROOT/iso"
 
-PIN="957c0ccf5872c9ea283a970976e462a6a1959d93"
+PIN="953bf81712cb2e54d4fe96308b0b73303d000cdf"
 
 PROFILE="$HOME/.cache/rick-linux-iso-profile"
 WORK="$HOME/.cache/rick-linux-archiso-work"
