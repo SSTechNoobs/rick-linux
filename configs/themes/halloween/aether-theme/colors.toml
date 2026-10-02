@@ -1,0 +1,57 @@
+mode = "dark"
+
+# Halloween UI colors
+accent = "#FF7A00"
+cursor = "#FFB347"
+
+foreground = "#F4F1EA"
+background = "#08060A"
+
+selection_foreground = "#08060A"
+selection_background = "#FF8C1A"
+
+bg = "#08060A"
+lighter_bg = "#18121D"
+dark_bg = "#050406"
+darker_bg = "#020203"
+
+fg = "#F4F1EA"
+light_fg = "#FFF4E6"
+bright_fg = "#FFFFFF"
+dark_fg = "#B9ADB9"
+muted = "#746775"
+selection = "#28172F"
+
+red = "#E34B4B"
+green = "#7FAF62"
+yellow = "#FFB52E"
+blue = "#7950A3"
+magenta = "#B34BD1"
+cyan = "#63B7B0"
+orange = "#FF7A00"
+brown = "#8D5524"
+
+bright_red = "#FF665E"
+bright_green = "#9CCE72"
+bright_yellow = "#FFD05A"
+bright_blue = "#9A6CC4"
+bright_magenta = "#D56AF2"
+bright_cyan = "#82D8CE"
+
+color0 = "#08060A"
+color1 = "#E34B4B"
+color2 = "#7FAF62"
+color3 = "#FFB52E"
+color4 = "#7950A3"
+color5 = "#B34BD1"
+color6 = "#63B7B0"
+color7 = "#F4F1EA"
+
+color8 = "#746775"
+color9 = "#FF665E"
+color10 = "#9CCE72"
+color11 = "#FFD05A"
+color12 = "#9A6CC4"
+color13 = "#D56AF2"
+color14 = "#82D8CE"
+color15 = "#FFFFFF"

@@ -150,6 +150,7 @@ def applications():
                 "Ghostty",
                 "Google Chrome",
                 "PCMan File Manager",
+                "Rick Theme Manager",
                 "Steam",
                 "Text Editor",
             }

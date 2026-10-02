@@ -8,6 +8,16 @@ PopupWindow {
     property var barWindow
     property var info: ({})
 
+    property string themeName: "Dallas Cowboys"
+    property string themeEdition: "DALLAS COWBOYS EDITION"
+
+    property string themePrimary: "#23D7FF"
+    property string themeSecondary: "#FF4BD6"
+    property string themePanel: "#07111F"
+    property string themeText: "#F6FAFF"
+    property string themeRow: "#07172A"
+    property string themeBorder: "#4B7A95"
+
     anchor.window: barWindow
     anchor.rect.x: barWindow ? (barWindow.width - implicitWidth) / 2 : 320
     anchor.rect.y: -implicitHeight - 45
@@ -20,9 +30,43 @@ PopupWindow {
     onVisibleChanged: {
         if (visible) {
             infoProc.running = false
+            themeInfoProc.running = false
+
             Qt.callLater(function() {
                 infoProc.running = true
+                themeInfoProc.running = true
             })
+        }
+    }
+
+    Process {
+        id: themeInfoProc
+
+        command: [
+            "/home/rick/.local/bin/rick-theme",
+            "info"
+        ]
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var parts = this.text.trim().split("|")
+
+                if (parts.length >= 3) {
+                    aboutPopup.themeName = parts[1]
+                    aboutPopup.themeEdition = parts[2]
+
+                    if (parts.length >= 10) {
+                        aboutPopup.themePrimary = parts[4]
+                        aboutPopup.themeSecondary = parts[5]
+                        aboutPopup.themePanel = parts[6]
+                        aboutPopup.themeText = parts[7]
+                        aboutPopup.themeRow = parts[8]
+                        aboutPopup.themeBorder = parts[9]
+                    }
+                }
+            }
         }
     }
 
@@ -53,14 +97,14 @@ PopupWindow {
     Rectangle {
         anchors.fill: parent
         radius: 20
-        color: "#07111F"
-        border.color: "#23D7FF"
+        color: aboutPopup.themePanel
+        border.color: aboutPopup.themePrimary
         border.width: 2
         clip: true
 
         Image {
             anchors.fill: parent
-            source: "file:///home/rick/Pictures/RicksLinuxWallpaper/wallpaper.png"
+            source: "file:///home/rick/.config/aether/theme/backgrounds/wallpaper.png"
             fillMode: Image.PreserveAspectCrop
             opacity: 0.82
         }
@@ -76,7 +120,7 @@ PopupWindow {
             anchors.verticalCenter: parent.verticalCenter
 
             text: "★"
-            color: "#23D7FF"
+            color: aboutPopup.themePrimary
             opacity: 0.11
             font.pixelSize: 420
             font.bold: true
@@ -87,7 +131,7 @@ PopupWindow {
             anchors.margins: 18
             radius: 16
             color: Qt.rgba(0.02, 0.05, 0.10, 0.58)
-            border.color: "#7FCFF0"
+            border.color: aboutPopup.themePrimary
             border.width: 1
 
             Column {
@@ -115,14 +159,14 @@ PopupWindow {
 
                         Text {
                             text: "RICKS"
-                            color: "#F7FBFF"
+                            color: aboutPopup.themeText
                             font.pixelSize: 46
                             font.bold: true
                         }
 
                         Text {
                             text: "HYPRLAND"
-                            color: "#FF4BD6"
+                            color: aboutPopup.themeSecondary
                             font.pixelSize: 46
                             font.bold: true
                         }
@@ -135,13 +179,13 @@ PopupWindow {
                         height: 48
                         radius: 10
                         color: Qt.rgba(0.01, 0.03, 0.07, 0.74)
-                        border.color: "#23D7FF"
+                        border.color: aboutPopup.themePrimary
                         border.width: 2
 
                         Text {
                             anchors.centerIn: parent
-                            text: "DALLAS COWBOYS EDITION"
-                            color: "#FFFFFF"
+                            text: aboutPopup.themeEdition
+                            color: aboutPopup.themeText
                             font.pixelSize: 22
                             font.bold: true
                             font.letterSpacing: 1
@@ -152,7 +196,7 @@ PopupWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: 108
                         text: "ARCH LINUX X86_64"
-                        color: "#D4DFEA"
+                        color: aboutPopup.themeText
                         font.pixelSize: 17
                         font.bold: true
                         font.letterSpacing: 3
@@ -166,7 +210,7 @@ PopupWindow {
 
                     Text {
                         text: "HARDWARE"
-                        color: "#23D7FF"
+                        color: aboutPopup.themePrimary
                         font.pixelSize: 17
                         font.bold: true
                     }
@@ -175,7 +219,7 @@ PopupWindow {
                         width: parent.width - 145
                         height: 3
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#23D7FF"
+                        color: aboutPopup.themePrimary
                         opacity: 0.80
                     }
                 }
@@ -202,7 +246,7 @@ PopupWindow {
                             height: 36
                             radius: 6
                             color: Qt.rgba(0.03, 0.09, 0.16, 0.80)
-                            border.color: "#4B7A95"
+                            border.color: aboutPopup.themeBorder
                             border.width: 1
 
                             Row {
@@ -214,7 +258,7 @@ PopupWindow {
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "◆"
-                                    color: index % 2 === 0 ? "#23D7FF" : "#FF4BD6"
+                                    color: index % 2 === 0 ? aboutPopup.themePrimary : aboutPopup.themeSecondary
                                     font.pixelSize: 13
                                 }
 
@@ -222,7 +266,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 210
                                     text: modelData.label
-                                    color: "#23D7FF"
+                                    color: aboutPopup.themePrimary
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     font.bold: true
@@ -232,7 +276,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 260
                                     text: modelData.value
-                                    color: "#F6FAFF"
+                                    color: aboutPopup.themeText
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     elide: Text.ElideRight
@@ -249,7 +293,7 @@ PopupWindow {
 
                     Text {
                         text: "SOFTWARE"
-                        color: "#FF4BD6"
+                        color: aboutPopup.themeSecondary
                         font.pixelSize: 17
                         font.bold: true
                     }
@@ -258,7 +302,7 @@ PopupWindow {
                         width: parent.width - 145
                         height: 3
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#FF4BD6"
+                        color: aboutPopup.themeSecondary
                         opacity: 0.80
                     }
                 }
@@ -285,7 +329,7 @@ PopupWindow {
                             height: 36
                             radius: 6
                             color: Qt.rgba(0.03, 0.09, 0.16, 0.80)
-                            border.color: "#4B7A95"
+                            border.color: aboutPopup.themeBorder
                             border.width: 1
 
                             Row {
@@ -297,7 +341,7 @@ PopupWindow {
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "◆"
-                                    color: index % 2 === 0 ? "#FF4BD6" : "#23D7FF"
+                                    color: index % 2 === 0 ? aboutPopup.themeSecondary : aboutPopup.themePrimary
                                     font.pixelSize: 13
                                 }
 
@@ -305,7 +349,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 210
                                     text: modelData.label
-                                    color: "#23D7FF"
+                                    color: aboutPopup.themePrimary
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     font.bold: true
@@ -315,7 +359,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 260
                                     text: modelData.value
-                                    color: "#F6FAFF"
+                                    color: aboutPopup.themeText
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     elide: Text.ElideRight
@@ -332,7 +376,7 @@ PopupWindow {
 
                     Text {
                         text: "AGE / UPTIME / INSTALL"
-                        color: "#23D7FF"
+                        color: aboutPopup.themePrimary
                         font.pixelSize: 17
                         font.bold: true
                     }
@@ -341,7 +385,7 @@ PopupWindow {
                         width: parent.width - 290
                         height: 3
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#23D7FF"
+                        color: aboutPopup.themePrimary
                         opacity: 0.80
                     }
                 }
@@ -365,7 +409,7 @@ PopupWindow {
                             height: 36
                             radius: 6
                             color: Qt.rgba(0.03, 0.09, 0.16, 0.80)
-                            border.color: "#4B7A95"
+                            border.color: aboutPopup.themeBorder
                             border.width: 1
 
                             Row {
@@ -377,7 +421,7 @@ PopupWindow {
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "◆"
-                                    color: index % 2 === 0 ? "#23D7FF" : "#FF4BD6"
+                                    color: index % 2 === 0 ? aboutPopup.themePrimary : aboutPopup.themeSecondary
                                     font.pixelSize: 13
                                 }
 
@@ -385,7 +429,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 210
                                     text: modelData.label
-                                    color: "#23D7FF"
+                                    color: aboutPopup.themePrimary
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     font.bold: true
@@ -395,7 +439,7 @@ PopupWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 260
                                     text: modelData.value
-                                    color: "#F6FAFF"
+                                    color: aboutPopup.themeText
                                     font.family: "monospace"
                                     font.pixelSize: 17
                                     elide: Text.ElideRight
@@ -411,7 +455,7 @@ PopupWindow {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Ricks Hyprland   •   Dallas Cowboys Edition   •   Arch Linux x86_64"
+                        text: "Ricks Hyprland   •   " + aboutPopup.themeEdition + "   •   Arch Linux x86_64"
                         color: "#CFD9E4"
                         font.pixelSize: 15
                         font.bold: true
@@ -427,13 +471,13 @@ PopupWindow {
                 height: 38
                 radius: 19
                 color: Qt.rgba(0.04, 0.08, 0.15, 0.92)
-                border.color: "#FF4BD6"
+                border.color: aboutPopup.themeSecondary
                 border.width: 1
 
                 Text {
                     anchors.centerIn: parent
                     text: "×"
-                    color: "#FFFFFF"
+                    color: aboutPopup.themeText
                     font.pixelSize: 23
                     font.bold: true
                 }

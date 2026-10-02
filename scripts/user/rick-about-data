@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+set -u
+
+clean() {
+    printf '%s' "$1" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//'
+}
+
+HOST="$(hostnamectl --static 2>/dev/null || hostname)"
+
+CPU="$(
+    lscpu 2>/dev/null |
+    awk -F: '/Model name/ {
+        sub(/^[ \t]+/, "", $2)
+        print $2
+        exit
+    }'
+)"
+
+GPU="$(
+    lspci 2>/dev/null |
+    awk -F': ' '/VGA compatible controller|3D controller|Display controller/ {
+        print $2
+        exit
+    }'
+)"
+
+DISPLAY="$(
+    hyprctl monitors 2>/dev/null |
+    awk '
+        /^Monitor / {
+            if (count++) printf ", "
+            printf "%s", $2
+        }
+        /^[[:space:]]+[0-9]+x[0-9]+@/ {
+            gsub(/^[[:space:]]+/, "")
+            split($0, a, " ")
+            printf " %s", a[1]
+        }
+        END { print "" }
+    '
+)"
+
+MEMORY="$(
+    free -h 2>/dev/null |
+    awk '/^Mem:/ {
+        print $3 " used / " $2 " total"
+    }'
+)"
+
+DISK="$(
+    df -h / 2>/dev/null |
+    awk 'NR==2 {
+        print $3 " used / " $2 " total (" $5 ")"
+    }'
+)"
+
+if [[ -r /etc/rick-linux-release ]]; then
+    OS="$(
+        awk -F= '
+            /^NAME=/ {
+                gsub(/"/, "", $2)
+                name=$2
+            }
+            /^VERSION=/ {
+                gsub(/"/, "", $2)
+                version=$2
+            }
+            END {
+                if (version != "")
+                    print name " " version
+                else
+                    print name
+            }
+        ' /etc/rick-linux-release
+    )"
+else
+    OS="$(
+        . /etc/os-release 2>/dev/null
+        printf '%s' "${PRETTY_NAME:-Arch Linux}"
+    )"
+fi
+
+KERNEL="$(uname -r)"
+WM="Hyprland"
+TERMINAL="Ghostty"
+PACKAGES="$(pacman -Q 2>/dev/null | wc -l | tr -d ' ')"
+
+LOCAL_IP="$(
+    ip -4 -o addr show scope global 2>/dev/null |
+    awk '{
+        split($4, a, "/")
+        print a[1]
+        exit
+    }'
+)"
+
+UPTIME="$(uptime -p 2>/dev/null | sed 's/^up //')"
+
+if [[ -r /etc/rick-linux-install-date ]]; then
+    RAW_INSTALL="$(cat /etc/rick-linux-install-date)"
+else
+    RAW_INSTALL="$(
+        sed -n '1s/^\[\([^]]*\)\].*/\1/p' \
+            /var/log/pacman.log 2>/dev/null
+    )"
+fi
+
+if [[ -n "${RAW_INSTALL:-}" ]]; then
+    INSTALLED="$(
+        date -d "$RAW_INSTALL" '+%B %-d, %Y at %-I:%M %p' \
+            2>/dev/null || printf '%s' "$RAW_INSTALL"
+    )"
+
+    INSTALL_EPOCH="$(date -d "$RAW_INSTALL" +%s 2>/dev/null || echo 0)"
+    NOW_EPOCH="$(date +%s)"
+
+    if (( INSTALL_EPOCH > 0 )); then
+        DAYS=$(( (NOW_EPOCH - INSTALL_EPOCH) / 86400 ))
+
+        if (( DAYS == 0 )); then
+            OS_AGE="Today"
+        elif (( DAYS == 1 )); then
+            OS_AGE="1 day"
+        else
+            OS_AGE="$DAYS days"
+        fi
+    else
+        OS_AGE="Unknown"
+    fi
+else
+    INSTALLED="Unknown"
+    OS_AGE="Unknown"
+fi
+
+printf 'HOST=%s\n' "$(clean "${HOST:-Unknown}")"
+printf 'CPU=%s\n' "$(clean "${CPU:-Unknown}")"
+printf 'GPU=%s\n' "$(clean "${GPU:-Unknown}")"
+printf 'DISPLAY=%s\n' "$(clean "${DISPLAY:-Unknown}")"
+printf 'MEMORY=%s\n' "$(clean "${MEMORY:-Unknown}")"
+printf 'DISK=%s\n' "$(clean "${DISK:-Unknown}")"
+
+printf 'OS=%s\n' "$(clean "${OS:-Unknown}")"
+printf 'KERNEL=%s\n' "$(clean "${KERNEL:-Unknown}")"
+printf 'WM=%s\n' "$(clean "${WM:-Unknown}")"
+printf 'TERMINAL=%s\n' "$(clean "${TERMINAL:-Unknown}")"
+printf 'PACKAGES=%s\n' "$(clean "${PACKAGES:-Unknown}")"
+printf 'LOCAL_IP=%s\n' "$(clean "${LOCAL_IP:-Unknown}")"
+
+printf 'OS_AGE=%s\n' "$(clean "${OS_AGE:-Unknown}")"
+printf 'UPTIME=%s\n' "$(clean "${UPTIME:-Unknown}")"
+printf 'INSTALLED=%s\n' "$(clean "${INSTALLED:-Unknown}")"

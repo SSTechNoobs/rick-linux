@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+THEMES="$HOME/.config/ricks-hyprland/themes"
+ACTIVE="$HOME/.config/ricks-hyprland/active-theme"
+
+mkdir -p "$THEMES"
+
+get_value() {
+    local file="$1"
+    local key="$2"
+
+    awk -F= -v key="$key" '
+        $1 == key {
+            sub(/^[^=]*=/, "")
+            print
+            exit
+        }
+    ' "$file"
+}
+
+current_theme() {
+    if [[ -f "$ACTIVE" ]]; then
+        cat "$ACTIVE"
+    else
+        echo "none"
+    fi
+}
+
+theme_info() {
+    local id
+    id="$(current_theme)"
+
+    if [[ "$id" == "none" ]]; then
+        echo "none|||||||||"
+        return
+    fi
+
+    local conf="$THEMES/$id/theme.conf"
+
+    [[ -f "$conf" ]] || {
+        echo "$id|||||||||"
+        return
+    }
+
+    local name edition description
+    local primary secondary panel text row border
+
+    name="$(get_value "$conf" NAME)"
+    edition="$(get_value "$conf" EDITION)"
+    description="$(get_value "$conf" DESCRIPTION)"
+
+    primary="$(get_value "$conf" PRIMARY)"
+    secondary="$(get_value "$conf" SECONDARY)"
+    panel="$(get_value "$conf" PANEL)"
+    text="$(get_value "$conf" TEXT)"
+    row="$(get_value "$conf" ROW)"
+    border="$(get_value "$conf" BORDER)"
+
+    primary="${primary:-#23D7FF}"
+    secondary="${secondary:-#FF4BD6}"
+    panel="${panel:-#07111F}"
+    text="${text:-#F6FAFF}"
+    row="${row:-#07172A}"
+    border="${border:-#4B7A95}"
+
+    printf '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s\n' \
+        "$id" \
+        "$name" \
+        "$edition" \
+        "$description" \
+        "$primary" \
+        "$secondary" \
+        "$panel" \
+        "$text" \
+        "$row" \
+        "$border"
+}
+
+list_themes() {
+    local current=""
+    [[ -f "$ACTIVE" ]] && current="$(cat "$ACTIVE")"
+
+    local dir
+
+    for dir in "$THEMES"/*; do
+        [[ -d "$dir" ]] || continue
+        [[ -f "$dir/theme.conf" ]] || continue
+
+        local id name edition description active
+
+        id="$(get_value "$dir/theme.conf" ID)"
+        name="$(get_value "$dir/theme.conf" NAME)"
+        edition="$(get_value "$dir/theme.conf" EDITION)"
+        description="$(get_value "$dir/theme.conf" DESCRIPTION)"
+
+        active="no"
+        [[ "$id" == "$current" ]] && active="yes"
+
+        printf '%s|%s|%s|%s|%s\n' \
+            "$id" "$name" "$edition" "$description" "$active"
+    done
+}
+
+apply_theme() {
+    local id="${1:-}"
+
+    [[ "$id" =~ ^[a-z0-9][a-z0-9-]*$ ]] || {
+        echo "Invalid theme: $id" >&2
+        exit 1
+    }
+
+    local dir="$THEMES/$id"
+    local source="$dir/aether-theme"
+    local live="$HOME/.config/aether/theme"
+    local temp="$HOME/.config/aether/theme.rick-new"
+    local previous="$HOME/.config/aether/theme.rick-previous"
+
+    [[ -f "$dir/theme.conf" ]] || {
+        echo "Theme not found: $id" >&2
+        exit 1
+    }
+
+    [[ -f "$source/colors.toml" ]] || {
+        echo "Theme is missing colors.toml: $id" >&2
+        exit 1
+    }
+
+    [[ -f "$source/backgrounds/wallpaper.png" ]] || {
+        echo "Theme is missing wallpaper.png: $id" >&2
+        exit 1
+    }
+
+    rm -rf "$temp"
+    mkdir -p "$temp"
+
+    cp -a "$source/." "$temp/"
+
+    rm -rf "$previous"
+
+    if [[ -d "$live" ]]; then
+        mv "$live" "$previous"
+    fi
+
+    mv "$temp" "$live"
+
+    printf '%s\n' "$id" > "$ACTIVE"
+
+    systemctl --user restart rick-wallpaper.service \
+        >/dev/null 2>&1 || true
+
+    "$HOME/.local/bin/rick-aether-apply" \
+        >/dev/null 2>&1 || true
+
+    hyprctl reload >/dev/null 2>&1 || true
+
+    echo "Applied theme: $id"
+}
+
+case "${1:-}" in
+    list)
+        list_themes
+        ;;
+
+    current)
+        current_theme
+        ;;
+
+    info)
+        theme_info
+        ;;
+
+    apply)
+        [[ $# -eq 2 ]] || {
+            echo "Usage: rick-theme apply THEME" >&2
+            exit 1
+        }
+
+        apply_theme "$2"
+        ;;
+
+    *)
+        echo "Usage:"
+        echo "  rick-theme list"
+        echo "  rick-theme current"
+        echo "  rick-theme info"
+        echo "  rick-theme apply THEME"
+        exit 1
+        ;;
+esac

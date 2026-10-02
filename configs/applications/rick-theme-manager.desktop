@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Rick Theme Manager
+Comment=Switch Ricks Hyprland themes
+Exec=/home/rick/.local/bin/rick-theme-manager
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;DesktopSettings;
+StartupNotify=true

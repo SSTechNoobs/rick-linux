@@ -166,6 +166,8 @@ install -d \
     "$USER_HOME/.config/quickshell/rick/icons" \
     "$USER_HOME/.config/quickshell/rick/system-icons" \
     "$USER_HOME/.config/quickshell/rick/weather-icons" \
+    "$USER_HOME/.config/quickshell/rick-theme-manager" \
+    "$USER_HOME/.config/ricks-hyprland/themes" \
     "$USER_HOME/.config/hypr" \
     "$USER_HOME/.config/ghostty" \
     "$USER_HOME/.config/libfm" \
@@ -197,6 +199,10 @@ install -m 0644 \
 install -m 0644 \
     "$SOURCE_DIR/configs/quickshell/rick/RickAboutPopup.qml" \
     "$USER_HOME/.config/quickshell/rick/RickAboutPopup.qml"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/quickshell/rick-theme-manager/shell.qml" \
+    "$USER_HOME/.config/quickshell/rick-theme-manager/shell.qml"
 
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/icons/." \
@@ -241,6 +247,15 @@ cp -a \
     "$SOURCE_DIR/configs/aether/theme/." \
     "$USER_HOME/.config/aether/theme/"
 
+# Ricks Hyprland seasonal theme library.
+cp -a \
+    "$SOURCE_DIR/configs/themes/." \
+    "$USER_HOME/.config/ricks-hyprland/themes/"
+
+# Dallas is the default theme on a fresh installation.
+printf '%s\n' 'dallas' \
+    > "$USER_HOME/.config/ricks-hyprland/active-theme"
+
 install -m 0644 \
     "$SOURCE_DIR/configs/ghostty/config" \
     "$USER_HOME/.config/ghostty/config"
@@ -255,12 +270,17 @@ install -m 0644 \
     "$USER_HOME/.local/share/applications/rick-chatgpt.desktop"
 
 install -m 0644 \
+    "$SOURCE_DIR/configs/applications/rick-theme-manager.desktop" \
+    "$USER_HOME/.local/share/applications/rick-theme-manager.desktop"
+
+install -m 0644 \
     "$SOURCE_DIR/configs/icons/chatgpt.png" \
     "$USER_HOME/.local/share/icons/chatgpt.png"
 
 sed -i \
     "s#/home/rick#/home/$USERNAME#g" \
-    "$USER_HOME/.local/share/applications/rick-chatgpt.desktop"
+    "$USER_HOME/.local/share/applications/rick-chatgpt.desktop" \
+    "$USER_HOME/.local/share/applications/rick-theme-manager.desktop"
 
 cat > "$USER_HOME/.config/user-dirs.dirs" <<'EOF_XDG'
 XDG_DESKTOP_DIR="$HOME/Desktop"
@@ -367,6 +387,8 @@ while IFS= read -r -d '' file; do
 done < <(
     find \
         "$USER_HOME/.config/quickshell/rick" \
+        "$USER_HOME/.config/quickshell/rick-theme-manager" \
+        "$USER_HOME/.config/ricks-hyprland" \
         "$USER_HOME/.config/hypr" \
         "$USER_HOME/.config/ghostty" \
         "$USER_HOME/.config/aether" \

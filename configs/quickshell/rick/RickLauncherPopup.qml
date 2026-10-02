@@ -18,6 +18,9 @@ PopupWindow {
     property string themeSurface: "#0C2340"
     property string themeBright: "#DDF8FF"
 
+    property string themeName: "Dallas Cowboys"
+    property string themeEdition: "DALLAS COWBOYS EDITION"
+
     function refreshThemeColors() {
         aetherColorProc.running = false
 
@@ -46,6 +49,36 @@ PopupWindow {
                     launcher.themeMuted = parts[3]
                     launcher.themeSurface = parts[4]
                     launcher.themeBright = parts[5]
+                }
+            }
+        }
+    }
+
+    function refreshThemeInfo() {
+        themeInfoProc.running = false
+
+        Qt.callLater(function() {
+            themeInfoProc.running = true
+        })
+    }
+
+    Process {
+        id: themeInfoProc
+
+        command: [
+            "/home/rick/.local/bin/rick-theme",
+            "info"
+        ]
+
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var parts = this.text.trim().split("|")
+
+                if (parts.length >= 3) {
+                    launcher.themeName = parts[1]
+                    launcher.themeEdition = parts[2]
                 }
             }
         }
@@ -117,6 +150,7 @@ PopupWindow {
         function onVisibleChanged() {
             if (launcher.visible) {
                 launcher.refreshThemeColors()
+                launcher.refreshThemeInfo()
                 launcher.refreshInstalledApps()
             }
         }
@@ -146,7 +180,7 @@ PopupWindow {
          */
         Image {
             anchors.fill: parent
-            source: "file:///home/rick/Pictures/RicksLinuxWallpaper/wallpaper.png"
+            source: "file:///home/rick/.config/aether/theme/backgrounds/wallpaper.png"
             fillMode: Image.PreserveAspectCrop
             opacity: 0.46
         }
@@ -263,7 +297,7 @@ PopupWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: 45
 
-                    text: "Dallas Cowboys Edition"
+                    text: launcher.themeEdition
                     color: launcher.themeBright
 
                     font.pixelSize: 16
@@ -895,7 +929,7 @@ PopupWindow {
                 Text {
                     anchors.centerIn: parent
 
-                    text: "Ricks Hyprland  •  Dallas Cowboys Edition"
+                    text: "Ricks Hyprland  •  " + launcher.themeEdition
                     color: launcher.themeMuted
 
                     font.pixelSize: 10
