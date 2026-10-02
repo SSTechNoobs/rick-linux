@@ -80,6 +80,23 @@ def write_pins(pins):
     )
 
 
+
+def move_pin(key, delta):
+    key = canonical(key)
+    pins = read_pins()
+
+    if key not in pins:
+        return
+
+    current = pins.index(key)
+    target = current + delta
+
+    if target < 0 or target >= len(pins):
+        return
+
+    pins[current], pins[target] = pins[target], pins[current]
+    write_pins(pins)
+
 def apps():
     result = {}
 
@@ -352,7 +369,7 @@ def main():
     if len(sys.argv) < 3:
         print(
             "usage: rick-taskbar-pins "
-            "{list|status|add|remove|toggle|run|new} APP",
+            "{list|status|add|remove|toggle|run|new|move-left|move-right} APP",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -391,6 +408,14 @@ def main():
 
     if command == "new":
         new_window(key)
+        return
+
+    if command == "move-left":
+        move_pin(key, -1)
+        return
+
+    if command == "move-right":
+        move_pin(key, 1)
         return
 
     raise SystemExit(f"Unknown command: {command}")

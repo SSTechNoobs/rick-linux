@@ -509,7 +509,7 @@ ShellRoot {
             anchor.rect.y: -height
 
             width: 200
-            height: 86
+            height: 162
             visible: false
             color: "transparent"
 
@@ -554,6 +554,80 @@ ShellRoot {
                                     "new",
                                     taskbarMenu.appKey
                                 ])
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 186
+                        height: 34
+                        radius: 6
+
+                        color: moveLeftMouse.containsMouse
+                            ? "#1f3d63"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Move Left"
+                            color: root.themeForeground
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            id: moveLeftMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                taskbarMenu.visible = false
+
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-taskbar-pins",
+                                    "move-left",
+                                    taskbarMenu.appKey
+                                ])
+
+                                Qt.callLater(function() {
+                                    root.refreshTaskbarPins()
+                                })
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: 186
+                        height: 34
+                        radius: 6
+
+                        color: moveRightMouse.containsMouse
+                            ? "#1f3d63"
+                            : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Move Right"
+                            color: root.themeForeground
+                            font.pixelSize: 14
+                        }
+
+                        MouseArea {
+                            id: moveRightMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+
+                            onClicked: {
+                                taskbarMenu.visible = false
+
+                                Quickshell.execDetached([
+                                    "/home/rick/.local/bin/rick-taskbar-pins",
+                                    "move-right",
+                                    taskbarMenu.appKey
+                                ])
+
+                                Qt.callLater(function() {
+                                    root.refreshTaskbarPins()
+                                })
                             }
                         }
                     }
