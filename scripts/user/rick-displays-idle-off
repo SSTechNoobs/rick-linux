@@ -1,15 +1,34 @@
 #!/usr/bin/env bash
 
-# TCL Roku TV
-curl -fsS -d '' \
-  http://192.168.6.238:8060/keypress/PowerOff \
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+FLAG="$RUNTIME/rick-displays-idle"
+
+echo "$(date '+%F %T') OFF" >> /tmp/rick-display-power.log
+
+touch "$FLAG"
+
+# Turn TCL off using Rick's existing TV helper.
+"$HOME/.local/bin/rick-tv-power" off \
   >/dev/null 2>&1 || true
 
-# Find the LG monitor's current DDC/I2C bus automatically.
+# Find LG DDC bus.
 LG_I2C="$(basename "$(readlink -f /sys/class/drm/card*-HDMI-A-1/ddc 2>/dev/null | head -n1)")"
 LG_BUS="${LG_I2C#i2c-}"
 
+# Physically power LG down.
 if [[ "$LG_BUS" =~ ^[0-9]+$ ]]; then
-    ddcutil --bus "$LG_BUS" setvcp D6 04 \
+    /usr/bin/ddcutil \
+      --bus "$LG_BUS" setvcp D6 04 --noverify \
       >/dev/null 2>&1 || true
 fi
+
+sleep 0.5
+
+# Remove LG video signal.
+hyprctl dispatch \
+  'hl.dsp.dpms({ action = "disable", monitor = "HDMI-A-1" })' \
+  >/dev/null 2>&1 || true
+
+# Keep LG off until real keyboard/mouse activity occurs.
+setsid -f "$HOME/.local/bin/rick-monitor-keepoff" \
+  >/dev/null 2>&1

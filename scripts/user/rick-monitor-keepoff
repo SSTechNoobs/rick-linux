@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+FLAG="$RUNTIME/rick-displays-idle"
+LOCK="$RUNTIME/rick-monitor-keepoff.lock"
+
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+while [[ -e "$FLAG" ]]; do
+    # Keep Hyprland's LG output disabled.
+    hyprctl dispatch \
+      'hl.dsp.dpms({ action = "disable", monitor = "HDMI-A-1" })' \
+      >/dev/null 2>&1 || true
+
+    # If the LG hardware wakes itself, put it back to sleep.
+    LG_I2C="$(basename "$(readlink -f /sys/class/drm/card*-HDMI-A-1/ddc 2>/dev/null | head -n1)")"
+    LG_BUS="${LG_I2C#i2c-}"
+
+    if [[ "$LG_BUS" =~ ^[0-9]+$ ]]; then
+        timeout 3 /usr/bin/ddcutil \
+          --bus "$LG_BUS" setvcp D6 04 --noverify \
+          >/dev/null 2>&1 || true
+    fi
+
+    sleep 2
+done

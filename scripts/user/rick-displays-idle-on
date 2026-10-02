@@ -1,14 +1,57 @@
 #!/usr/bin/env bash
 
-# Find the LG monitor's current DDC/I2C bus automatically.
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+FLAG="$RUNTIME/rick-displays-idle"
+TV="192.168.6.238"
+
+echo "$(date '+%F %T') ON" >> /tmp/rick-display-power.log
+
+# Stop forcing LG off.
+rm -f "$FLAG"
+
+sleep 2.5
+
+# Restore LG HDMI signal FIRST.
+hyprctl dispatch \
+  'hl.dsp.dpms({ action = "enable", monitor = "HDMI-A-1" })' \
+  >/dev/null 2>&1 || true
+
+sleep 2
+
+# Find LG DDC bus after HDMI is restored.
 LG_I2C="$(basename "$(readlink -f /sys/class/drm/card*-HDMI-A-1/ddc 2>/dev/null | head -n1)")"
 LG_BUS="${LG_I2C#i2c-}"
 
+# Wake LG hardware, retrying if necessary.
 if [[ "$LG_BUS" =~ ^[0-9]+$ ]]; then
-    ddcutil --bus "$LG_BUS" setvcp D6 01 \
-      >/dev/null 2>&1 || true
+    for TRY in 1 2 3 4; do
+        /usr/bin/ddcutil \
+          --bus "$LG_BUS" setvcp D6 01 --noverify \
+          >/dev/null 2>&1 && break
+        sleep 2
+    done
 fi
 
-# TCL Roku TV
-"$HOME/.local/bin/rick-tv-power" on \
+# Wake TCL.
+curl -fsS -d '' \
+  "http://$TV:8060/keypress/PowerOn" \
+  >/dev/null 2>&1 || true
+
+sleep 1
+
+curl -fsS -d '' \
+  "http://$TV:8060/keypress/Home" \
+  >/dev/null 2>&1 || true
+
+sleep 2
+
+# Return TCL to computer.
+curl -fsS -d '' \
+  "http://$TV:8060/keypress/InputHDMI1" \
+  >/dev/null 2>&1 || true
+
+sleep 1
+
+curl -fsS -d '' \
+  "http://$TV:8060/keypress/InputHDMI1" \
   >/dev/null 2>&1 || true
