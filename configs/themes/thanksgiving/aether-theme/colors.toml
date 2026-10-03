@@ -1,0 +1,57 @@
+mode = "dark"
+
+accent = "#C96A2D"
+cursor = "#D9A441"
+
+foreground = "#FFF3DF"
+background = "#1A100A"
+
+selection_foreground = "#1A100A"
+selection_background = "#D9A441"
+
+bg = "#1A100A"
+lighter_bg = "#2A1A10"
+dark_bg = "#100904"
+darker_bg = "#080502"
+
+fg = "#FFF3DF"
+light_fg = "#FFF8EC"
+bright_fg = "#FFFFFF"
+dark_fg = "#C8B39B"
+muted = "#8C7765"
+
+selection = "#4A2A16"
+
+red = "#B84A32"
+green = "#7F8A48"
+yellow = "#D9A441"
+blue = "#6B7D87"
+magenta = "#9A5A4A"
+cyan = "#73958B"
+orange = "#C96A2D"
+brown = "#8C5A2B"
+
+bright_red = "#D76343"
+bright_green = "#9AA85B"
+bright_yellow = "#F0C15A"
+bright_blue = "#879AA5"
+bright_magenta = "#B87562"
+bright_cyan = "#8EB1A6"
+
+color0 = "#1A100A"
+color1 = "#B84A32"
+color2 = "#7F8A48"
+color3 = "#D9A441"
+color4 = "#6B7D87"
+color5 = "#9A5A4A"
+color6 = "#73958B"
+color7 = "#FFF3DF"
+
+color8 = "#8C7765"
+color9 = "#D76343"
+color10 = "#9AA85B"
+color11 = "#F0C15A"
+color12 = "#879AA5"
+color13 = "#B87562"
+color14 = "#8EB1A6"
+color15 = "#FFFFFF"
