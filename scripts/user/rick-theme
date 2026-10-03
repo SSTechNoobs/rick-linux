@@ -146,6 +146,12 @@ apply_theme() {
 
     printf '%s\n' "$id" > "$ACTIVE"
 
+    # Apply matching Ricks Linux boot/shutdown Plymouth artwork.
+    if [[ -x /usr/local/sbin/rick-theme-plymouth ]]; then
+        sudo -n /usr/local/sbin/rick-theme-plymouth || \
+            echo "WARNING: Plymouth splash could not be updated." >&2
+    fi
+
     systemctl --user restart rick-wallpaper.service \
         >/dev/null 2>&1 || true
 

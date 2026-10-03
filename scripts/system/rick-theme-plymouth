@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+USER_NAME="${SUDO_USER:-}"
+
+[[ -n "$USER_NAME" && "$USER_NAME" != "root" ]] || {
+    echo "rick-theme-plymouth must be run through sudo." >&2
+    exit 1
+}
+
+USER_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+
+[[ -n "$USER_HOME" ]] || {
+    echo "Could not determine user home." >&2
+    exit 1
+}
+
+ACTIVE="$USER_HOME/.config/ricks-hyprland/active-theme"
+
+[[ -f "$ACTIVE" ]] || {
+    echo "Active theme marker not found." >&2
+    exit 1
+}
+
+THEME_ID="$(cat "$ACTIVE")"
+
+[[ "$THEME_ID" =~ ^[a-z0-9][a-z0-9-]*$ ]] || {
+    echo "Invalid active theme: $THEME_ID" >&2
+    exit 1
+}
+
+THEME="$USER_HOME/.config/ricks-hyprland/themes/$THEME_ID"
+BOOT="$THEME/boot.png"
+SHUTDOWN="$THEME/shutdown.png"
+
+DEST="/usr/share/plymouth/themes/ricks-linux"
+
+for FILE in "$BOOT" "$SHUTDOWN"; do
+    [[ -f "$FILE" && ! -L "$FILE" ]] || {
+        echo "Missing or invalid Plymouth image: $FILE" >&2
+        exit 1
+    }
+done
+
+mkdir -p "$DEST"
+
+CHANGED=0
+
+if ! cmp -s "$BOOT" "$DEST/boot.png"; then
+    install -m 0644 "$BOOT" "$DEST/boot.png"
+    CHANGED=1
+fi
+
+if ! cmp -s "$SHUTDOWN" "$DEST/shutdown.png"; then
+    install -m 0644 "$SHUTDOWN" "$DEST/shutdown.png"
+    CHANGED=1
+fi
+
+if (( CHANGED )); then
+    echo "Installing $THEME_ID Plymouth splash..."
+    mkinitcpio -P
+    echo "Plymouth splash updated: $THEME_ID"
+else
+    echo "Plymouth splash already current: $THEME_ID"
+fi

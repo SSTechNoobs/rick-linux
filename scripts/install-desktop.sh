@@ -75,6 +75,24 @@ arch-chroot "$MOUNTPOINT" \
 arch-chroot "$MOUNTPOINT" \
     mkinitcpio -P
 
+# Allow Ricks Theme Manager to switch Plymouth artwork safely.
+install -m 0755 \
+    "$SOURCE_DIR/scripts/system/rick-theme-plymouth" \
+    "$MOUNTPOINT/usr/local/sbin/rick-theme-plymouth"
+
+install -d -m 0750 \
+    "$MOUNTPOINT/etc/sudoers.d"
+
+printf '%s ALL=(root) NOPASSWD: /usr/local/sbin/rick-theme-plymouth\n' \
+    "$USERNAME" \
+    > "$MOUNTPOINT/etc/sudoers.d/91-ricks-theme-plymouth"
+
+chmod 0440 \
+    "$MOUNTPOINT/etc/sudoers.d/91-ricks-theme-plymouth"
+
+arch-chroot "$MOUNTPOINT" \
+    visudo -cf /etc/sudoers.d/91-ricks-theme-plymouth >/dev/null
+
 # ------------------------------------------------------------
 # Pacman candy progress bar
 # ------------------------------------------------------------
@@ -251,6 +269,11 @@ cp -a \
 cp -a \
     "$SOURCE_DIR/configs/themes/." \
     "$USER_HOME/.config/ricks-hyprland/themes/"
+
+# Custom folder/icon themes used by seasonal themes.
+cp -a \
+    "$SOURCE_DIR/configs/icon-themes/." \
+    "$USER_HOME/.local/share/icons/"
 
 # Dallas is the default theme on a fresh installation.
 printf '%s\n' 'dallas' \
