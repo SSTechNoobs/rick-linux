@@ -343,7 +343,7 @@ for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
         "$USER_HOME/.local/bin/$(basename "$helper")"
 done
 
-# Weekly Ricks Hyprland automatic updates.
+# Daily Ricks Hyprland automatic updates.
 install -m 0644 \
     "$SOURCE_DIR/configs/systemd/user/rick-update-check.service" \
     "$USER_HOME/.config/systemd/user/rick-update-check.service"
@@ -525,7 +525,7 @@ rm -f "$TEMP_SUDO"
 TEMP_SUDO=""
 
 # ------------------------------------------------------------
-# Automatic weekly updates
+# Automatic daily updates
 # ------------------------------------------------------------
 
 info "Configuring automatic weekly updates..."

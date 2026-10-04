@@ -1,5 +1,5 @@
 [Unit]
-Description=Ricks Hyprland weekly automatic update
+Description=Ricks Hyprland daily automatic update
 
 [Service]
 Type=oneshot
