@@ -429,6 +429,10 @@ cat > "$USER_HOME/.local/bin/rick-session-start" <<EOF_SESSION
 
 sleep 2
 
+# Wake displays that may still be hardware-powered off from the last session.
+"/home/$USERNAME/.local/bin/rick-displays-idle-on" >/dev/null 2>&1 || true
+
+
 pgrep -x nm-applet >/dev/null 2>&1 || \
     setsid -f nm-applet --indicator >/dev/null 2>&1
 
