@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PIN="230f4296b5aa9e64f06b0d8f24646dd3a56cd592"
+PIN="acbdc205b8ca402351ba5d005ea1d1d7d60547d1"
 RAW_BASE="https://raw.githubusercontent.com"
 
 echo "Ricks Linux Installer"
