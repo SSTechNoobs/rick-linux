@@ -76,6 +76,7 @@ $changed"
     notify-send \
         -a "Ricks Hyprland" \
         -u normal \
+        -t 300000 \
         -i system-software-update \
         "Ricks Hyprland Updated" \
         "$body"
