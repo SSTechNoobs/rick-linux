@@ -4,11 +4,11 @@ set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 ISO_DIR="$ROOT/iso"
 
-PIN="b5de3d544a270ad3aebc896f41acebbd0bcf509a"
+PIN="7265e1aec02d3f84b0c2bdffa7df1830c895329e"
 
 PROFILE="$HOME/.cache/rick-linux-iso-profile"
 WORK="$HOME/.cache/rick-linux-archiso-work"
-OUT="$HOME/Downloads/ricks-linux-v1.0.1"
+OUT="/home/rick/Projects/Ricks-Hyprland-ISOs/v1.0.2"
 
 if ! command -v mkarchiso >/dev/null 2>&1; then
     echo "ERROR: mkarchiso is missing."
@@ -21,7 +21,13 @@ if [[ ! -d /usr/share/archiso/configs/releng ]]; then
     exit 1
 fi
 
-sudo rm -rf "$PROFILE" "$WORK" "$OUT"
+if [[ -e "$OUT" ]]; then
+    echo "ERROR: ISO output folder already exists: $OUT"
+    echo "Refusing to overwrite an existing ISO."
+    exit 1
+fi
+
+sudo rm -rf "$PROFILE" "$WORK"
 mkdir -p "$OUT"
 
 cp -a /usr/share/archiso/configs/releng "$PROFILE"
