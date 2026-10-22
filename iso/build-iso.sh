@@ -42,7 +42,25 @@ if [[ -e "$OUT" ]]; then
     exit 1
 fi
 
-sudo rm -rf "$PROFILE" "$WORK"
+# Protect against deleting unexpected build paths.
+for dir in "$PROFILE" "$WORK"; do
+    case "$dir" in
+        "$BUILD_HOME/.cache/rick-linux-iso-profile"|\
+"$BUILD_HOME/.cache/rick-linux-archiso-work")
+            ;;
+        *)
+            echo "ERROR: Unsafe build directory: $dir"
+            exit 1
+            ;;
+    esac
+
+    if [[ -L "$dir" ]]; then
+        echo "ERROR: Build directory is a symbolic link: $dir"
+        exit 1
+    fi
+done
+
+sudo rm -rf -- "$PROFILE" "$WORK"
 mkdir -p "$OUT"
 
 cp -a /usr/share/archiso/configs/releng "$PROFILE"
