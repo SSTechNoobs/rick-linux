@@ -4,11 +4,26 @@ set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 ISO_DIR="$ROOT/iso"
 
-PIN="7265e1aec02d3f84b0c2bdffa7df1830c895329e"
+VERSION="${1:?Usage: sudo bash iso/build-iso.sh v1.0.3}"
 
-PROFILE="$HOME/.cache/rick-linux-iso-profile"
-WORK="$HOME/.cache/rick-linux-archiso-work"
-OUT="/home/rick/Projects/Ricks-Hyprland-ISOs/v1.0.2"
+if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "ERROR: Version must look like v1.0.3"
+    exit 1
+fi
+
+BUILD_USER="${SUDO_USER:-$USER}"
+BUILD_HOME="$(getent passwd "$BUILD_USER" | cut -d: -f6)"
+
+[[ -n "$BUILD_HOME" && -d "$BUILD_HOME" ]] || {
+    echo "ERROR: Cannot locate build user's home directory."
+    exit 1
+}
+
+PIN="$(git -C "$ROOT" rev-parse HEAD)"
+
+PROFILE="$BUILD_HOME/.cache/rick-linux-iso-profile"
+WORK="$BUILD_HOME/.cache/rick-linux-archiso-work"
+OUT="$BUILD_HOME/Projects/Ricks-Hyprland-ISOs/$VERSION"
 
 if ! command -v mkarchiso >/dev/null 2>&1; then
     echo "ERROR: mkarchiso is missing."
@@ -80,5 +95,18 @@ sudo mkarchiso -v \
     "$PROFILE"
 
 echo
+echo "=== VERIFY AND FINALIZE ISO ==="
+
+shopt -s nullglob
+isos=("$OUT"/rick-linux-*.iso)
+
+if (( ${#isos[@]} == 0 )); then
+    echo "ERROR: No ISO file was created."
+    exit 1
+fi
+
+chown "$BUILD_USER:$(id -gn "$BUILD_USER")" "${isos[@]}"
+sha256sum "${isos[@]}"
+
+echo
 echo "=== BUILD COMPLETE ==="
-sha256sum "$OUT"/rick-linux-*.iso
