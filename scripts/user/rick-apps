@@ -152,7 +152,9 @@ def applications():
                 "PCMan File Manager",
                 "Rick Theme Manager",
                 "Steam",
-                "Text Editor",
+                "DesignCraft",
+                "GridCraft",
+                "WordCraft",
             }
 
             if name not in allowed_apps:

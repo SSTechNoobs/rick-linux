@@ -505,7 +505,7 @@ git clone https://aur.archlinux.org/yay-bin.git /tmp/rick-yay
 cd /tmp/rick-yay
 makepkg -si --noconfirm
 
-for package in google-chrome aether brother-hll2395dw; do
+for package in google-chrome aether brother-hll2395dw wordcraft-bin gridcraft-bin designcraft; do
     echo
     echo "Installing AUR package: $package"
 
