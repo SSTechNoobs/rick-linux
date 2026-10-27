@@ -581,7 +581,7 @@ git clone https://aur.archlinux.org/yay-bin.git /tmp/rick-yay
 cd /tmp/rick-yay
 makepkg -si --noconfirm
 
-for package in google-chrome aether brother-hll2395dw wordcraft-bin gridcraft-bin designcraft; do
+for package in google-chrome aether brother-hll2395dw wordcraft-bin gridcraft-bin; do
     echo
     echo "Installing AUR package: $package"
 
@@ -593,6 +593,24 @@ for package in google-chrome aether brother-hll2395dw wordcraft-bin gridcraft-bi
         "$package" || \
         echo "WARNING: $package could not be installed."
 done
+
+echo
+echo "Installing DesignCraft prebuilt Arch package..."
+
+DESIGNCRAFT_URL="https://github.com/storytold/designcraft/releases/download/v0.13.0/designcraft-0.13.0-linux-x86_64.pkg.tar.zst"
+DESIGNCRAFT_SHA256="1ce63385259ab9ce0c6f87b6bed5f67f51fbb3af02197fd297dde7d4e4662e03"
+DESIGNCRAFT_PACKAGE="/tmp/designcraft.pkg.tar.zst"
+
+rm -f "$DESIGNCRAFT_PACKAGE"
+
+curl -fL     "$DESIGNCRAFT_URL"     -o "$DESIGNCRAFT_PACKAGE"
+
+printf '%s  %s\n'     "$DESIGNCRAFT_SHA256"     "$DESIGNCRAFT_PACKAGE" |
+    sha256sum -c -
+
+sudo /usr/bin/pacman     -U     --noconfirm     "$DESIGNCRAFT_PACKAGE"
+
+rm -f "$DESIGNCRAFT_PACKAGE"
 EOF_AUR
 )
 
