@@ -1,23 +1,42 @@
 #!/usr/bin/env bash
 
-# Prefer the TCL 32S357 for Ricks Hyprland audio.
+DMI_VENDOR="$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null || true)"
+DMI_PRODUCT="$(cat /sys/class/dmi/id/product_name 2>/dev/null || true)"
+DMI_BOARD="$(cat /sys/class/dmi/id/board_name 2>/dev/null || true)"
+
+# Rick's Minisforum M2 prefers the TCL 32S357 HDMI audio output.
+if [[ "$DMI_VENDOR" == "Micro Computer (HK) Tech Limited" &&
+      "$DMI_PRODUCT" == "M2" &&
+      "$DMI_BOARD" == "PTBNB" ]]; then
+
+    for attempt in {1..20}; do
+        while read -r id; do
+            [[ "$id" =~ ^[0-9]+$ ]] || continue
+
+            if wpctl inspect "$id" 2>/dev/null |
+               grep -q 'node.nick = "32S357"'; then
+
+                wpctl set-default "$id" 2>/dev/null || true
+                wpctl set-mute "$id" 0 2>/dev/null || true
+                wpctl set-volume "$id" 1.00 2>/dev/null || true
+                exit 0
+            fi
+        done < <(
+            wpctl status |
+            sed -n '/Sinks:/,/Sources:/p' |
+            sed -n 's/.*[ *]\{0,1\}\([0-9][0-9]*\)\..*/\1/p'
+        )
+
+        sleep 0.5
+    done
+fi
+
+# Universal fallback: use the computer's normal default output.
 for attempt in {1..20}; do
-    while read -r id; do
-        [[ "$id" =~ ^[0-9]+$ ]] || continue
-
-        if wpctl inspect "$id" 2>/dev/null |
-           grep -q 'node.nick = "32S357"'; then
-
-            wpctl set-default "$id" 2>/dev/null || true
-            wpctl set-mute "$id" 0 2>/dev/null || true
-            wpctl set-volume "$id" 1.00 2>/dev/null || true
-            exit 0
-        fi
-    done < <(
-        wpctl status |
-        sed -n '/Sinks:/,/Sources:/p' |
-        sed -n 's/.*[ *]\{0,1\}\([0-9][0-9]*\)\..*/\1/p'
-    )
+    if wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 >/dev/null 2>&1 &&
+       wpctl set-volume @DEFAULT_AUDIO_SINK@ 1.00 >/dev/null 2>&1; then
+        exit 0
+    fi
 
     sleep 0.5
 done
