@@ -211,11 +211,11 @@ fi
 cat > "$MOUNTPOINT/etc/rick-linux-release" <<'RICK_RELEASE'
 NAME="Ricks Linux"
 ID=rick-linux
-VERSION="1.0.1"
+VERSION="1.1.0"
 BASE="Arch Linux"
 RICK_RELEASE
 
-printf '%s\n' '2026-09-25T22:37:46+00:00' > "$MOUNTPOINT/etc/rick-linux-install-date"
+arch-chroot "$MOUNTPOINT" date --iso-8601=seconds > "$MOUNTPOINT/etc/rick-linux-install-date"
 
 # ------------------------------------------------------------
 # User configuration
