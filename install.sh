@@ -153,9 +153,21 @@ list_and_select_disk(){
 prompt_settings(){
   local pass1 pass2
 
-  HOSTNAME_VALUE="minisfourm"
   USERNAME_VALUE="rick"
   TIMEZONE_VALUE="America/Chicago"
+
+  while true; do
+    read -r -p "Computer name [ricks-pc]: " HOSTNAME_VALUE
+    HOSTNAME_VALUE="${HOSTNAME_VALUE:-ricks-pc}"
+    HOSTNAME_VALUE="${HOSTNAME_VALUE,,}"
+
+    if [[ "$HOSTNAME_VALUE" =~ ^[a-z0-9][a-z0-9-]{0,62}$ &&
+          "$HOSTNAME_VALUE" != *- ]]; then
+      break
+    fi
+
+    warn "Computer name may contain only letters, numbers, and hyphens."
+  done
 
   printf "Hostname: %s\n" "$HOSTNAME_VALUE"
   printf "Username: %s\n" "$USERNAME_VALUE"
