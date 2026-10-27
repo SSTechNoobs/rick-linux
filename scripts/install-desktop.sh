@@ -292,6 +292,39 @@ install -m 0644 \
     "$USER_HOME/.config/hypr/hyprland.lua"
 
 
+# Rick's Minisforum M2 display layout.
+# All other computers keep Hyprland's automatic monitor configuration.
+DMI_VENDOR="$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null || true)"
+DMI_PRODUCT="$(cat /sys/class/dmi/id/product_name 2>/dev/null || true)"
+DMI_BOARD="$(cat /sys/class/dmi/id/board_name 2>/dev/null || true)"
+
+if [[ "$DMI_VENDOR" == "Micro Computer (HK) Tech Limited" &&
+      "$DMI_PRODUCT" == "M2" &&
+      "$DMI_BOARD" == "PTBNB" ]]; then
+
+    info "Minisforum M2 detected; applying Rick's LG portrait monitor layout."
+
+    cat >> "$USER_HOME/.config/hypr/hyprland.lua" <<'EOF_RICK_MONITOR'
+
+-- Rick's Minisforum M2 LG portrait monitor
+hl.monitor({
+    output = "HDMI-A-1",
+    mode = "1920x1080@60",
+    position = "1920x0",
+    scale = 1.3333334,
+    transform = 3,
+})
+
+hl.workspace_rule({
+    workspace = "10",
+    monitor = "HDMI-A-1",
+    default = true,
+    persistent = true,
+})
+EOF_RICK_MONITOR
+fi
+
+
 install -m 0644 \
     "$SOURCE_DIR/configs/aether/custom/ricks-wallpaper/config.json" \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper/config.json"
