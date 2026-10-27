@@ -6,8 +6,6 @@ quickshell
 hyprlauncher
 ghostty
 mesa
-vulkan-intel
-intel-media-driver
 xorg-xwayland
 xdg-desktop-portal-hyprland
 pipewire

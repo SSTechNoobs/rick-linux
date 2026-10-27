@@ -51,7 +51,7 @@ require_uefi(){
 }
 
 require_tools(){
-  local tools=(lsblk findmnt ping timedatectl sgdisk wipefs partprobe udevadm mkfs.fat mkfs.ext4 mount umount blkid pacstrap genfstab arch-chroot lscpu git)
+  local tools=(lsblk findmnt ping timedatectl sgdisk wipefs partprobe udevadm mkfs.fat mkfs.ext4 mount umount blkid pacstrap genfstab arch-chroot lscpu lspci git)
   local missing=()
   local tool
   for tool in "${tools[@]}"; do

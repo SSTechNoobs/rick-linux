@@ -104,7 +104,7 @@ if ! grep -qxF 'ILoveCandy' "$MOUNTPOINT/etc/pacman.conf"; then
 fi
 
 # ------------------------------------------------------------
-# Enable multilib, then install Steam + 32-bit Intel Vulkan
+# Enable multilib, detect graphics hardware, then install Steam
 # ------------------------------------------------------------
 
 info "Enabling Arch multilib repository..."
@@ -113,14 +113,57 @@ sed -i \
     '/^#\[multilib\]$/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' \
     "$MOUNTPOINT/etc/pacman.conf"
 
-info "Installing Steam and multilib graphics support..."
+info "Detecting graphics hardware..."
+
+GPU_INFO="$(lspci -nnd ::03xx 2>/dev/null || true)"
+GRAPHICS_PACKAGES=(lib32-mesa)
+GPU_DETECTED=0
+
+if grep -qi '8086:' <<< "$GPU_INFO"; then
+    info "Intel graphics detected."
+    GRAPHICS_PACKAGES+=(
+        vulkan-intel
+        intel-media-driver
+        libva-intel-driver
+        lib32-vulkan-intel
+    )
+    GPU_DETECTED=1
+fi
+
+if grep -qi '1002:' <<< "$GPU_INFO"; then
+    info "AMD graphics detected."
+    GRAPHICS_PACKAGES+=(
+        vulkan-radeon
+        lib32-vulkan-radeon
+    )
+    GPU_DETECTED=1
+fi
+
+if grep -qi '10de:' <<< "$GPU_INFO"; then
+    info "NVIDIA graphics detected."
+    GRAPHICS_PACKAGES+=(
+        vulkan-nouveau
+        lib32-vulkan-nouveau
+    )
+    GPU_DETECTED=1
+fi
+
+if (( GPU_DETECTED == 0 )); then
+    info "Unknown graphics hardware; installing software Vulkan fallback."
+    GRAPHICS_PACKAGES+=(
+        vulkan-swrast
+        lib32-vulkan-swrast
+    )
+fi
+
+info "Installing Steam and detected graphics support..."
 
 arch-chroot "$MOUNTPOINT" pacman \
     -Syu \
     --needed \
     --noconfirm \
     steam \
-    lib32-vulkan-intel
+    "${GRAPHICS_PACKAGES[@]}"
 
 # ------------------------------------------------------------
 # System services
