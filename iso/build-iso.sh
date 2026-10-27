@@ -19,7 +19,22 @@ BUILD_HOME="$(getent passwd "$BUILD_USER" | cut -d: -f6)"
     exit 1
 }
 
-PIN="$(git -C "$ROOT" rev-parse HEAD)"
+if [[ -n "$(git -C "$ROOT" status --porcelain)" ]]; then
+    echo "ERROR: Repository has uncommitted or untracked changes."
+    echo "Commit or remove them before building the ISO."
+    exit 1
+fi
+
+LOCAL_HEAD="$(git -C "$ROOT" rev-parse HEAD)"
+REMOTE_HEAD="$(git -C "$ROOT" rev-parse origin/main 2>/dev/null || true)"
+
+if [[ -z "$REMOTE_HEAD" || "$LOCAL_HEAD" != "$REMOTE_HEAD" ]]; then
+    echo "ERROR: Local HEAD is not synchronized with origin/main."
+    echo "Push or synchronize the repository before building the ISO."
+    exit 1
+fi
+
+PIN="$LOCAL_HEAD"
 
 PROFILE="$BUILD_HOME/.cache/rick-linux-iso-profile"
 WORK="$BUILD_HOME/.cache/rick-linux-archiso-work"
