@@ -153,7 +153,18 @@ list_and_select_disk(){
 prompt_settings(){
   local pass1 pass2
 
-  TIMEZONE_VALUE="America/Chicago"
+  while true; do
+    read -r -p "Timezone [America/Chicago]: " TIMEZONE_VALUE
+    TIMEZONE_VALUE="${TIMEZONE_VALUE:-America/Chicago}"
+
+    if [[ "$TIMEZONE_VALUE" != /* &&
+          "$TIMEZONE_VALUE" != *".."* &&
+          -e "/usr/share/zoneinfo/$TIMEZONE_VALUE" ]]; then
+      break
+    fi
+
+    warn "Timezone not found. Example: America/Chicago"
+  done
 
   while true; do
     read -r -p "Username [rick]: " USERNAME_VALUE
