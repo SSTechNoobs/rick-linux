@@ -153,8 +153,18 @@ list_and_select_disk(){
 prompt_settings(){
   local pass1 pass2
 
-  USERNAME_VALUE="rick"
   TIMEZONE_VALUE="America/Chicago"
+
+  while true; do
+    read -r -p "Username [rick]: " USERNAME_VALUE
+    USERNAME_VALUE="${USERNAME_VALUE:-rick}"
+
+    if [[ "$USERNAME_VALUE" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]]; then
+      break
+    fi
+
+    warn "Username must begin with a lowercase letter or underscore and contain only lowercase letters, numbers, underscores, or hyphens."
+  done
 
   while true; do
     read -r -p "Computer name [ricks-pc]: " HOSTNAME_VALUE
