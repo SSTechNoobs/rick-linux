@@ -226,7 +226,7 @@ fi
 cat > "$MOUNTPOINT/etc/rick-linux-release" <<'RICK_RELEASE'
 NAME="Ricks Linux"
 ID=rick-linux
-VERSION="1.1.0"
+VERSION="1.1.1"
 BASE="Arch Linux"
 RICK_RELEASE
 
