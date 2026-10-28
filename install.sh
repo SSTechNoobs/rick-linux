@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_NAME="Ricks Linux Installer"
-VERSION="1.1.2"
+VERSION="1.1.3"
 MOUNTPOINT="/mnt"
 REPO_URL="https://github.com/SSTechNoobs/rick-linux.git"
 SOURCE_DIR="/tmp/rick-linux-source"
