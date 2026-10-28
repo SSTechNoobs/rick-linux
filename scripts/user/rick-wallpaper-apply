@@ -10,7 +10,7 @@ WALLPAPER=""
 if [[ -f "$AETHER_WALLPAPER" ]]; then
     WALLPAPER="$AETHER_WALLPAPER"
 
-# Fall back to the permanent Ricks Hyprland wallpaper.
+# Fall back to the permanent Hyprland wallpaper.
 elif [[ -f "$PERMANENT" ]]; then
     WALLPAPER="$PERMANENT"
 fi

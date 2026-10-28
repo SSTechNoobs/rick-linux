@@ -1,6 +1,6 @@
 [Icon Theme]
-Name=Ricks Thanksgiving
-Comment=Thanksgiving folder icons for Ricks Hyprland
+Name=Hyprland Thanksgiving
+Comment=Thanksgiving folder icons for Hyprland
 Inherits=Adwaita,hicolor
 Directories=scalable/places
 

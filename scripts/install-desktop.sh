@@ -345,7 +345,7 @@ cp -a \
     "$SOURCE_DIR/configs/aether/theme/." \
     "$USER_HOME/.config/aether/theme/"
 
-# Ricks Hyprland seasonal theme library.
+# Hyprland seasonal theme library.
 cp -a \
     "$SOURCE_DIR/configs/themes/." \
     "$USER_HOME/.config/ricks-hyprland/themes/"
@@ -423,7 +423,7 @@ for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
         "$USER_HOME/.local/bin/$(basename "$helper")"
 done
 
-# Daily Ricks Hyprland automatic updates.
+# Daily Ricks Linux automatic updates.
 install -m 0644 \
     "$SOURCE_DIR/configs/systemd/user/rick-update-check.service" \
     "$USER_HOME/.config/systemd/user/rick-update-check.service"

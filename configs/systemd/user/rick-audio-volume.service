@@ -1,5 +1,5 @@
 [Unit]
-Description=Set Ricks Hyprland audio volume to 100%
+Description=Set Hyprland audio volume to 100%
 After=pipewire.service wireplumber.service
 Wants=pipewire.service wireplumber.service
 

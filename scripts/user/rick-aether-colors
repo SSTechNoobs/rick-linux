@@ -5,7 +5,7 @@ import tomllib
 
 theme = Path.home() / ".config/aether/theme/colors.toml"
 
-# Ricks Hyprland fallbacks if Aether is unavailable.
+# Hyprland fallbacks if Aether is unavailable.
 colors = {
     "background": "#041E42",
     "foreground": "#FFFFFF",

@@ -142,7 +142,7 @@ def applications():
             if not name or not exec_line:
                 continue
 
-            # Ricks Hyprland launcher: only show user-selected software.
+            # Hyprland launcher: only show user-selected software.
             allowed_apps = {
                 "Aether",
                 "Calculator",

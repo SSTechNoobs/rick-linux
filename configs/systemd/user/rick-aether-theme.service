@@ -1,5 +1,5 @@
 [Unit]
-Description=Apply Aether theme to Ricks Hyprland
+Description=Apply Aether theme to Hyprland
 
 [Service]
 Type=oneshot

@@ -1,6 +1,6 @@
 [Icon Theme]
-Name=Ricks Halloween
-Comment=Halloween folder icons for Ricks Hyprland
+Name=Hyprland Halloween
+Comment=Halloween folder icons for Hyprland
 Inherits=Adwaita,hicolor
 Directories=scalable/places
 

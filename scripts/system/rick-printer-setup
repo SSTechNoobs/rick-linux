@@ -31,5 +31,5 @@ for attempt in {1..12}; do
 done
 
 # Printer is not on this computer's network.
-# This is normal on universal Ricks Hyprland installations.
+# This is normal on universal Ricks Linux installations.
 exit 0

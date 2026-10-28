@@ -1,6 +1,6 @@
 [Icon Theme]
-Name=Ricks Dallas
-Comment=Dallas folder icons for Ricks Hyprland
+Name=Hyprland Dallas
+Comment=Dallas Cowboys folder icons for Hyprland
 Inherits=Adwaita,hicolor
 Directories=scalable/places
 

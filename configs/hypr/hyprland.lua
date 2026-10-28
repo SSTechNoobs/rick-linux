@@ -92,7 +92,7 @@ hl.env("HYPRCURSOR_SIZE", "24")
 
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 
--- Ricks Hyprland: read current Aether active-border color.
+-- Hyprland: read current Aether active-border color.
 local function ricksAetherActiveBorder()
     local home = os.getenv("HOME")
     local path = home .. "/.config/aether/theme/hyprland.conf"

@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Rick Theme Manager
-Comment=Switch Ricks Hyprland themes
+Name=Hyprland Theme Manager
+Comment=Switch Hyprland themes
 Exec=/home/rick/.local/bin/rick-theme-manager
 Icon=preferences-desktop-theme
 Terminal=false

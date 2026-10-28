@@ -93,7 +93,7 @@ ShellRoot {
         id: window
 
         visible: true
-        title: "Rick Theme Manager"
+        title: "Hyprland Theme Manager"
 
         implicitWidth: 1040
         implicitHeight: 650
@@ -120,7 +120,7 @@ ShellRoot {
                         spacing: 4
 
                         Text {
-                            text: "RICK THEME MANAGER"
+                            text: "HYPRLAND THEME MANAGER"
                             color: "#FFFFFF"
                             font.pixelSize: 30
                             font.bold: true

@@ -1,5 +1,5 @@
 [Unit]
-Description=Automatically update Ricks Hyprland every day
+Description=Automatically update Hyprland every day
 
 [Timer]
 OnCalendar=*-*-* 07:30:00

@@ -30,7 +30,7 @@ fi
 {
     echo
     echo "========================================"
-    echo "Ricks Hyprland automatic update"
+    echo "Ricks Linux automatic update"
     date
     echo "Official updates: $repo_count"
     echo "AUR updates:      $aur_count"
@@ -74,18 +74,18 @@ $changed"
     fi
 
     notify-send \
-        -a "Ricks Hyprland" \
+        -a "Ricks Linux" \
         -u normal \
         -t 300000 \
         -i system-software-update \
-        "Ricks Hyprland Updated" \
+        "Ricks Linux Updated" \
         "$body"
 else
     notify-send \
-        -a "Ricks Hyprland" \
+        -a "Ricks Linux" \
         -u critical \
         -i dialog-error \
-        "Ricks Hyprland Update Failed" \
+        "Ricks Linux Update Failed" \
         "Automatic updates did not finish successfully.
 
 Log:
