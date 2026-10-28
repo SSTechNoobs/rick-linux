@@ -703,7 +703,7 @@ PopupWindow {
                         model: [
                             {
                                 icon: "file:///home/rick/.config/quickshell/rick/system-icons/about.svg",
-                                name: "About Ricks Linux",
+                                name: "About System",
                                 subtitle: "Hardware & system details",
                                 action: "about"
                             },
