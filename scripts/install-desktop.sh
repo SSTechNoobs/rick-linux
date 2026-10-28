@@ -6,6 +6,12 @@ USERNAME="${2:?Missing username}"
 SOURCE_DIR="${3:?Missing Rick Linux source directory}"
 DESKTOP_NAME="${4:-Hyprland}"
 
+DEFAULT_THEME="dallas"
+
+if [[ "${DESKTOP_NAME,,}" == "jojo hyprland" ]]; then
+    DEFAULT_THEME="miami"
+fi
+
 USER_HOME="$MOUNTPOINT/home/$USERNAME"
 TEMP_SUDO=""
 
@@ -65,6 +71,14 @@ install -d \
 cp -a \
     "$SOURCE_DIR/configs/plymouth/ricks-linux/." \
     "$MOUNTPOINT/usr/share/plymouth/themes/ricks-linux/"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/boot.png" \
+    "$MOUNTPOINT/usr/share/plymouth/themes/ricks-linux/boot.png"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/shutdown.png" \
+    "$MOUNTPOINT/usr/share/plymouth/themes/ricks-linux/shutdown.png"
 
 sed -i \
     's/^HOOKS=.*/HOOKS=(base systemd plymouth autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)/' \
@@ -342,7 +356,7 @@ install -m 0755 \
     "$USER_HOME/.config/aether/custom/ricks-wallpaper/post-apply.sh"
 
 cp -a \
-    "$SOURCE_DIR/configs/aether/theme/." \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/aether-theme/." \
     "$USER_HOME/.config/aether/theme/"
 
 # Hyprland seasonal theme library.
@@ -355,9 +369,11 @@ cp -a \
     "$SOURCE_DIR/configs/icon-themes/." \
     "$USER_HOME/.local/share/icons/"
 
-# Dallas is the default theme on a fresh installation.
-printf '%s\n' 'dallas' \
+# Select the initial desktop theme.
+printf '%s\n' "$DEFAULT_THEME" \
     > "$USER_HOME/.config/ricks-hyprland/active-theme"
+
+info "Initial Hyprland theme: $DEFAULT_THEME"
 
 install -m 0644 \
     "$SOURCE_DIR/configs/ghostty/config" \

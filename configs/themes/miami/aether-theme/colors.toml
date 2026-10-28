@@ -1,0 +1,57 @@
+mode = "dark"
+
+# Miami Dolphins inspired UI colors
+accent = "#008E97"
+cursor = "#FC4C02"
+
+foreground = "#FFFFFF"
+background = "#031C1F"
+
+selection_foreground = "#FFFFFF"
+selection_background = "#005778"
+
+bg = "#031C1F"
+lighter_bg = "#07383D"
+dark_bg = "#021416"
+darker_bg = "#010A0B"
+
+fg = "#FFFFFF"
+light_fg = "#E8FFFF"
+bright_fg = "#FFFFFF"
+dark_fg = "#A9CBCD"
+muted = "#75A5A8"
+selection = "#064B50"
+
+red = "#E85C5C"
+green = "#54B88A"
+yellow = "#F4C95D"
+blue = "#005778"
+magenta = "#C16DAA"
+cyan = "#008E97"
+orange = "#FC4C02"
+brown = "#956342"
+
+bright_red = "#FF7777"
+bright_green = "#74D6A8"
+bright_yellow = "#FFE07A"
+bright_blue = "#13839A"
+bright_magenta = "#DD8BC4"
+bright_cyan = "#34C5C9"
+
+color0 = "#031C1F"
+color1 = "#E85C5C"
+color2 = "#54B88A"
+color3 = "#F4C95D"
+color4 = "#005778"
+color5 = "#C16DAA"
+color6 = "#008E97"
+color7 = "#FFFFFF"
+
+color8 = "#75A5A8"
+color9 = "#FF7777"
+color10 = "#74D6A8"
+color11 = "#FFE07A"
+color12 = "#13839A"
+color13 = "#DD8BC4"
+color14 = "#34C5C9"
+color15 = "#FFFFFF"
