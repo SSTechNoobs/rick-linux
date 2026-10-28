@@ -138,7 +138,7 @@ if (( ${#isos[@]} == 0 )); then
     exit 1
 fi
 
-chown "$BUILD_USER:$(id -gn "$BUILD_USER")" "$OUT" "${isos[@]}"
+sudo chown "$BUILD_USER:$(id -gn "$BUILD_USER")" "$OUT" "${isos[@]}"
 sha256sum "${isos[@]}"
 
 echo
