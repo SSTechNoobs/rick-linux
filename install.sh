@@ -190,8 +190,20 @@ prompt_settings(){
     warn "Computer name may contain only letters, numbers, and hyphens."
   done
 
+  while true; do
+    read -r -p "Hyprland name [Hyprland]: " DESKTOP_NAME_VALUE
+    DESKTOP_NAME_VALUE="${DESKTOP_NAME_VALUE:-Hyprland}"
+
+    if [[ "$DESKTOP_NAME_VALUE" =~ ^[[:alnum:]][[:alnum:][:space:]_.-]{0,39}$ ]]; then
+      break
+    fi
+
+    warn "Hyprland name may contain letters, numbers, spaces, periods, underscores, and hyphens."
+  done
+
   printf "Hostname: %s\n" "$HOSTNAME_VALUE"
   printf "Username: %s\n" "$USERNAME_VALUE"
+  printf "Hyprland name: %s\n" "$DESKTOP_NAME_VALUE"
   printf "Timezone: %s\n" "$TIMEZONE_VALUE"
 
   while true; do
@@ -228,6 +240,7 @@ confirm_erase(){
   printf "  Layout:   GPT, 1 GiB EFI/FAT32, remaining space ext4 root\n"
   printf "  Hostname: %s\n" "$HOSTNAME_VALUE"
   printf "  User:     %s\n" "$USERNAME_VALUE"
+  printf "  Desktop:  %s\n" "$DESKTOP_NAME_VALUE"
   printf "  Timezone: %s\n" "$TIMEZONE_VALUE"
   printf "  Swap:     none in v%s\n\n" "$VERSION"
 
@@ -334,7 +347,8 @@ install_desktop(){
   bash "$SOURCE_DIR/scripts/install-desktop.sh" \
     "$MOUNTPOINT" \
     "$USERNAME_VALUE" \
-    "$SOURCE_DIR"
+    "$SOURCE_DIR" \
+    "$DESKTOP_NAME_VALUE"
 
   ok "Ricks Linux desktop installed."
 }

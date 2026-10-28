@@ -18,6 +18,7 @@ PopupWindow {
     property string themeSurface: "#0C2340"
     property string themeBright: "#DDF8FF"
 
+    property string desktopName: "Hyprland"
     property string themeName: "Dallas Cowboys"
     property string themeEdition: "DALLAS COWBOYS EDITION"
 
@@ -80,6 +81,26 @@ PopupWindow {
                     launcher.themeName = parts[1]
                     launcher.themeEdition = parts[2]
                 }
+            }
+        }
+    }
+
+    Process {
+        id: desktopNameProc
+
+        command: [
+            "cat",
+            "/home/rick/.config/ricks-hyprland/desktop-name"
+        ]
+
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+
+                if (value.length > 0)
+                    launcher.desktopName = value
             }
         }
     }
@@ -269,28 +290,17 @@ PopupWindow {
                 }
 
                 /*
-                 * Centered Ricks Hyprland title.
+                 * Centered personalized Hyprland title.
                  */
-                Row {
+                Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: 4
-                    spacing: 9
 
-                    Text {
-                        text: "RICKS"
-                        color: launcher.themeForeground
+                    text: launcher.desktopName.toUpperCase()
+                    color: launcher.themeForeground
 
-                        font.pixelSize: 32
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: "HYPRLAND"
-                        color: launcher.themeAccent
-
-                        font.pixelSize: 32
-                        font.bold: true
-                    }
+                    font.pixelSize: 32
+                    font.bold: true
                 }
 
                 Text {
@@ -884,7 +894,7 @@ PopupWindow {
                             spacing: 8
 
                             Text {
-                                text: "RICKS HYPRLAND"
+                                text: launcher.desktopName.toUpperCase()
                                 color: launcher.themeBright
 
                                 font.pixelSize: 12
@@ -929,7 +939,7 @@ PopupWindow {
                 Text {
                     anchors.centerIn: parent
 
-                    text: "Ricks Hyprland  •  " + launcher.themeEdition
+                    text: launcher.desktopName + "  •  " + launcher.themeEdition
                     color: launcher.themeMuted
 
                     font.pixelSize: 10

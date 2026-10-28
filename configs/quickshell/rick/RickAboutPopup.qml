@@ -8,6 +8,7 @@ PopupWindow {
     property var barWindow
     property var info: ({})
 
+    property string desktopName: "Hyprland"
     property string themeName: "Dallas Cowboys"
     property string themeEdition: "DALLAS COWBOYS EDITION"
 
@@ -31,10 +32,12 @@ PopupWindow {
         if (visible) {
             infoProc.running = false
             themeInfoProc.running = false
+            desktopNameProc.running = false
 
             Qt.callLater(function() {
                 infoProc.running = true
                 themeInfoProc.running = true
+                desktopNameProc.running = true
             })
         }
     }
@@ -66,6 +69,26 @@ PopupWindow {
                         aboutPopup.themeBorder = parts[9]
                     }
                 }
+            }
+        }
+    }
+
+    Process {
+        id: desktopNameProc
+
+        command: [
+            "cat",
+            "/home/rick/.config/ricks-hyprland/desktop-name"
+        ]
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+
+                if (value.length > 0)
+                    aboutPopup.desktopName = value
             }
         }
     }
@@ -152,24 +175,13 @@ PopupWindow {
                         font.bold: true
                     }
 
-                    Row {
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: 8
-                        spacing: 10
-
-                        Text {
-                            text: "RICKS"
-                            color: aboutPopup.themeText
-                            font.pixelSize: 46
-                            font.bold: true
-                        }
-
-                        Text {
-                            text: "HYPRLAND"
-                            color: aboutPopup.themeSecondary
-                            font.pixelSize: 46
-                            font.bold: true
-                        }
+                        text: aboutPopup.desktopName.toUpperCase()
+                        color: aboutPopup.themeText
+                        font.pixelSize: 46
+                        font.bold: true
                     }
 
                     Rectangle {
@@ -455,7 +467,7 @@ PopupWindow {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Ricks Hyprland   •   " + aboutPopup.themeEdition + "   •   Arch Linux x86_64"
+                        text: aboutPopup.desktopName + "   •   " + aboutPopup.themeEdition + "   •   Arch Linux x86_64"
                         color: "#CFD9E4"
                         font.pixelSize: 15
                         font.bold: true

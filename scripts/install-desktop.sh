@@ -4,6 +4,7 @@ set -Eeuo pipefail
 MOUNTPOINT="${1:?Missing target mountpoint}"
 USERNAME="${2:?Missing username}"
 SOURCE_DIR="${3:?Missing Rick Linux source directory}"
+DESKTOP_NAME="${4:-Hyprland}"
 
 USER_HOME="$MOUNTPOINT/home/$USERNAME"
 TEMP_SUDO=""
@@ -248,6 +249,9 @@ install -d \
     "$USER_HOME/Pictures/RicksLinuxSplash" \
     "$USER_HOME/Pictures/RicksLinuxWallpaper" \
     "$USER_HOME/Videos"
+
+printf '%s\n' "$DESKTOP_NAME" \
+    > "$USER_HOME/.config/ricks-hyprland/desktop-name"
 
 install -m 0644 \
     "$SOURCE_DIR/configs/quickshell/rick/shell.qml" \
