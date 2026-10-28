@@ -411,14 +411,14 @@ finish(){
   cat <<EOF_DONE
 
 =================================================
-Ricks Linux v$VERSION installation is complete.
+Hyprland v$VERSION installation is complete.
 
 Target: $TARGET_DISK
 User:   $USERNAME_VALUE
 
 Installed:
   - Hyprland desktop
-  - Quickshell Cowboys-themed bottom bar
+  - Quickshell themed bottom bar
   - Ghostty
   - Google Chrome
   - Steam
@@ -435,7 +435,7 @@ Next:
   2. Remove the installation USB while restarting.
   3. Boot the installed drive.
 
-Ricks Linux will automatically log in and start Hyprland.
+The system will automatically log in and start Hyprland.
 =================================================
 EOF_DONE
 }

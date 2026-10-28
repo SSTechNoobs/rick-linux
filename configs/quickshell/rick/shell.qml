@@ -380,7 +380,7 @@ ShellRoot {
                 width: 48
                 height: 36
 
-                source: "file:///home/rick/.config/quickshell/rick/icons/cowboys-helmet.png"
+                source: "file:///home/rick/.config/quickshell/rick/icons/theme-launcher.png"
                 fillMode: Image.PreserveAspectFit
                 smooth: true
                 mipmap: true

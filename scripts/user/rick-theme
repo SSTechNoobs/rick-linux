@@ -146,6 +146,29 @@ apply_theme() {
 
     printf '%s\n' "$id" > "$ACTIVE"
 
+    # Keep login transition and fallback wallpaper matched to the theme.
+    mkdir -p \
+        "$HOME/Pictures/RicksLinuxSplash" \
+        "$HOME/Pictures/RicksLinuxWallpaper"
+
+    [[ -f "$dir/boot.png" ]] && \
+        cp -f "$dir/boot.png" "$HOME/Pictures/RicksLinuxSplash/boot.png"
+
+    [[ -f "$dir/shutdown.png" ]] && \
+        cp -f "$dir/shutdown.png" "$HOME/Pictures/RicksLinuxSplash/shutdown.png"
+
+    [[ -f "$dir/wallpaper.png" ]] && \
+        cp -f "$dir/wallpaper.png" "$HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
+
+    # Keep the taskbar launcher matched to the active team theme.
+    launcher="$HOME/.config/quickshell/rick/icons/theme-launcher.png"
+
+    if [[ -f "$dir/taskbar-icon.png" ]]; then
+        cp -f "$dir/taskbar-icon.png" "$launcher"
+    elif [[ -f "$HOME/.config/quickshell/rick/icons/aether.png" ]]; then
+        cp -f "$HOME/.config/quickshell/rick/icons/aether.png" "$launcher"
+    fi
+
     # Apply matching Ricks Linux boot/shutdown Plymouth artwork.
     if [[ -x /usr/local/sbin/rick-theme-plymouth ]]; then
         sudo -n /usr/local/sbin/rick-theme-plymouth || \

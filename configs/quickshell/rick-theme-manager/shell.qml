@@ -186,7 +186,7 @@ ShellRoot {
                         delegate: Rectangle {
                             required property var modelData
 
-                            width: 225
+                            width: 180
                             height: 390
                             radius: 14
 

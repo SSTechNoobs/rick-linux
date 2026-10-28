@@ -1,0 +1,57 @@
+mode = "dark"
+
+# Chicago Bears inspired UI colors
+accent = "#C83803"
+cursor = "#FFFFFF"
+
+foreground = "#FFFFFF"
+background = "#0B162A"
+
+selection_foreground = "#FFFFFF"
+selection_background = "#27364F"
+
+bg = "#0B162A"
+lighter_bg = "#16243A"
+dark_bg = "#060D18"
+darker_bg = "#03070D"
+
+fg = "#FFFFFF"
+light_fg = "#F4F6FA"
+bright_fg = "#FFFFFF"
+dark_fg = "#B7C0CF"
+muted = "#7E8A9E"
+selection = "#233653"
+
+red = "#E45C5C"
+green = "#55B889"
+yellow = "#E9B949"
+blue = "#315A8A"
+magenta = "#B56DAA"
+cyan = "#4EA5D9"
+orange = "#C83803"
+brown = "#956342"
+
+bright_red = "#FF7777"
+bright_green = "#74D6A8"
+bright_yellow = "#FFD56A"
+bright_blue = "#5D8FC5"
+bright_magenta = "#D38CC3"
+bright_cyan = "#76C7EE"
+
+color0 = "#0B162A"
+color1 = "#E45C5C"
+color2 = "#55B889"
+color3 = "#E9B949"
+color4 = "#315A8A"
+color5 = "#B56DAA"
+color6 = "#4EA5D9"
+color7 = "#FFFFFF"
+
+color8 = "#7E8A9E"
+color9 = "#FF7777"
+color10 = "#74D6A8"
+color11 = "#FFD56A"
+color12 = "#5D8FC5"
+color13 = "#D38CC3"
+color14 = "#76C7EE"
+color15 = "#FFFFFF"

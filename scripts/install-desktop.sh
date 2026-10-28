@@ -8,9 +8,14 @@ DESKTOP_NAME="${4:-Hyprland}"
 
 DEFAULT_THEME="dallas"
 
-if [[ "${DESKTOP_NAME,,}" == "jojo hyprland" ]]; then
-    DEFAULT_THEME="miami"
-fi
+case "${DESKTOP_NAME,,}" in
+    "jojo hyprland")
+        DEFAULT_THEME="miami"
+        ;;
+    "gary hyprland")
+        DEFAULT_THEME="chicago"
+        ;;
+esac
 
 USER_HOME="$MOUNTPOINT/home/$USERNAME"
 TEMP_SUDO=""
@@ -287,6 +292,18 @@ cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/icons/." \
     "$USER_HOME/.config/quickshell/rick/icons/"
 
+# Neutral launcher fallback for themes without a team helmet.
+install -m 0644 \
+    "$SOURCE_DIR/configs/quickshell/rick/icons/aether.png" \
+    "$USER_HOME/.config/quickshell/rick/icons/theme-launcher.png"
+
+# Team themes can override the launcher with their own helmet.
+if [[ -f "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/taskbar-icon.png" ]]; then
+    install -m 0644 \
+        "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/taskbar-icon.png" \
+        "$USER_HOME/.config/quickshell/rick/icons/theme-launcher.png"
+fi
+
 cp -a \
     "$SOURCE_DIR/configs/quickshell/rick/system-icons/." \
     "$USER_HOME/.config/quickshell/rick/system-icons/"
@@ -296,12 +313,16 @@ cp -a \
     "$USER_HOME/.config/quickshell/rick/weather-icons/"
 
 
-cp -a \
-    "$SOURCE_DIR/configs/splash/RicksLinuxSplash/." \
-    "$USER_HOME/Pictures/RicksLinuxSplash/"
+install -m 0644 \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/boot.png" \
+    "$USER_HOME/Pictures/RicksLinuxSplash/boot.png"
 
 install -m 0644 \
-    "$SOURCE_DIR/configs/wallpaper/wallpaper.png" \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/shutdown.png" \
+    "$USER_HOME/Pictures/RicksLinuxSplash/shutdown.png"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/themes/$DEFAULT_THEME/wallpaper.png" \
     "$USER_HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
 
 
@@ -700,6 +721,6 @@ do
     fi
 done
 printf '\n'
-printf 'Ricks Linux desktop installation completed.\n'
+printf 'Hyprland desktop installation completed.\n'
 printf 'Automatic login user: %s\n' "$USERNAME"
 printf 'Desktop: Hyprland + Quickshell\n'
