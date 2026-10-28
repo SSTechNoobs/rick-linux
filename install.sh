@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_NAME="Ricks Linux Installer"
-VERSION="1.1.3"
+VERSION="1.1.4"
 MOUNTPOINT="/mnt"
 REPO_URL="https://github.com/SSTechNoobs/rick-linux.git"
 SOURCE_DIR="/tmp/rick-linux-source"
@@ -45,9 +45,13 @@ require_archiso(){
   ok "Arch installation environment detected."
 }
 
-require_uefi(){
-  [[ -d /sys/firmware/efi/efivars ]] || die "Not booted in UEFI mode. Reboot the USB using its UEFI entry."
-  ok "UEFI mode detected."
+detect_boot_mode(){
+  if [[ -d /sys/firmware/efi/efivars ]]; then
+    BOOT_MODE=UEFI
+  else
+    BOOT_MODE=BIOS
+  fi
+  ok "Boot mode detected: $BOOT_MODE"
 }
 
 require_tools(){
@@ -117,8 +121,7 @@ list_and_select_disk(){
 
   printf "\n"
   warn "THE NEXT DRIVE SELECTION IS DESTRUCTIVE."
-  warn "Selecting a valid number will immediately ERASE that entire drive and start installation."
-  warn "There is no second confirmation after the drive is selected."
+  warn "Selecting a drive requires an additional ERASE confirmation before formatting."
   printf "\nChoose the drive to ERASE & INSTALL:\n\n"
   for i in "${!DISKS[@]}"; do
     disk="${DISKS[$i]}"
@@ -237,7 +240,7 @@ confirm_erase(){
   printf "\n%bDESTRUCTIVE INSTALLATION PLAN%b\n" "$yellow" "$reset"
   printf "  Target:   %s\n" "$TARGET_DISK"
   lsblk -dno SIZE,MODEL,SERIAL "$TARGET_DISK" | sed 's/^/  Disk:     /'
-  printf "  Layout:   GPT, 1 GiB EFI/FAT32, remaining space ext4 root\n"
+  printf "  Layout:   GPT, 2 MiB BIOS boot, 1 GiB EFI/FAT32, remaining ext4 root\n"
   printf "  Hostname: %s\n" "$HOSTNAME_VALUE"
   printf "  User:     %s\n" "$USERNAME_VALUE"
   printf "  Desktop:  %s\n" "$DESKTOP_NAME_VALUE"
@@ -261,46 +264,52 @@ partition_path(){
 }
 
 partition_and_format(){
-  EFI_PART="$(partition_path "$TARGET_DISK" 1)"
-  ROOT_PART="$(partition_path "$TARGET_DISK" 2)"
+  EFI_PART="$(partition_path "$TARGET_DISK" 2)"
+  ROOT_PART="$(partition_path "$TARGET_DISK" 3)"
 
   info "Erasing existing partition signatures on $TARGET_DISK..."
   wipefs -a -f "$TARGET_DISK"
   sgdisk --zap-all "$TARGET_DISK"
 
-  info "Creating GPT partition table..."
-  sgdisk -n 1:0:+1G -t 1:ef00 -c 1:"EFI System" "$TARGET_DISK"
-  sgdisk -n 2:0:0   -t 2:8300 -c 2:"Arch Linux root" "$TARGET_DISK"
+  info "Creating GPT partitions for BIOS and UEFI..."
+  sgdisk -n 1:0:+2M -t 1:ef02 -c 1:"BIOS boot" "$TARGET_DISK"
+  sgdisk -n 2:0:+1G -t 2:ef00 -c 2:"EFI System" "$TARGET_DISK"
+  sgdisk -n 3:0:0 -t 3:8300 -c 3:"Arch Linux root" "$TARGET_DISK"
   partprobe "$TARGET_DISK"
   udevadm settle
 
-  [[ -b "$EFI_PART" ]] || die "EFI partition did not appear: $EFI_PART"
-  [[ -b "$ROOT_PART" ]] || die "Root partition did not appear: $ROOT_PART"
+  [[ -b "$EFI_PART" ]] || die "EFI partition missing: $EFI_PART"
+  [[ -b "$ROOT_PART" ]] || die "Root partition missing: $ROOT_PART"
 
-  info "Formatting EFI partition as FAT32..."
   mkfs.fat -F 32 -n EFI "$EFI_PART"
-
-  info "Formatting root partition as ext4..."
   mkfs.ext4 -F -L root "$ROOT_PART"
-
   ok "Partitioning and formatting completed."
 }
 
 mount_target(){
   mount "$ROOT_PART" "$MOUNTPOINT"
-  mkdir -p "$MOUNTPOINT/boot"
-  mount "$EFI_PART" "$MOUNTPOINT/boot"
-  ok "Target filesystems mounted."
+  if [[ "$BOOT_MODE" == UEFI ]]; then
+    mkdir -p "$MOUNTPOINT/boot"
+    mount "$EFI_PART" "$MOUNTPOINT/boot"
+  else
+    mkdir -p "$MOUNTPOINT/efi"
+    mount "$EFI_PART" "$MOUNTPOINT/efi"
+  fi
+  ok "Target filesystems mounted for $BOOT_MODE."
 }
 
 install_base(){
-  local packages=(base linux linux-firmware networkmanager sudo nano git curl efibootmgr)
+  local packages=(base linux linux-firmware networkmanager sudo nano git curl)
+  if [[ "$BOOT_MODE" == UEFI ]]; then
+    packages+=(efibootmgr)
+  else
+    packages+=(grub)
+  fi
   [[ -n "$MICROCODE_PKG" ]] && packages+=("$MICROCODE_PKG")
 
-  info "Installing the Arch base system. This can take several minutes..."
+  info "Installing the Arch base system..."
   pacstrap -K "$MOUNTPOINT" "${packages[@]}"
 
-  info "Generating fstab..."
   genfstab -U "$MOUNTPOINT" > "$MOUNTPOINT/etc/fstab"
   ok "Base system installed."
 }
@@ -353,13 +362,13 @@ install_desktop(){
   ok "Ricks Linux desktop installed."
 }
 
-install_bootloader(){
+install_uefi_bootloader(){
   local root_uuid
   root_uuid="$(blkid -s UUID -o value "$ROOT_PART")"
   [[ -n "$root_uuid" ]] || die "Could not read root filesystem UUID."
 
   info "Installing systemd-boot..."
-  arch-chroot "$MOUNTPOINT" bootctl --path=/boot install
+  bootctl --esp-path="$MOUNTPOINT/boot" install
 
   mkdir -p "$MOUNTPOINT/boot/loader/entries"
   cat > "$MOUNTPOINT/boot/loader/loader.conf" <<'EOF_LOADER'
@@ -389,11 +398,27 @@ EOF_LOADER
   ok "systemd-boot installed."
 }
 
+install_bootloader(){
+  if [[ "$BOOT_MODE" == BIOS ]]; then
+    info "Installing GRUB for Legacy BIOS..."
+    arch-chroot "$MOUNTPOINT" grub-install --target=i386-pc --recheck "$TARGET_DISK"
+    arch-chroot "$MOUNTPOINT" grub-mkconfig -o /boot/grub/grub.cfg
+    ok "Legacy BIOS GRUB installed."
+  else
+    install_uefi_bootloader
+  fi
+}
+
 verify_install(){
   info "Verifying installed files..."
   [[ -f "$MOUNTPOINT/boot/vmlinuz-linux" ]] || die "Kernel is missing from /boot."
   [[ -f "$MOUNTPOINT/boot/initramfs-linux.img" ]] || die "Initramfs is missing from /boot."
-  [[ -f "$MOUNTPOINT/boot/loader/entries/arch.conf" ]] || die "systemd-boot entry is missing."
+  if [[ "$BOOT_MODE" == UEFI ]]; then
+    [[ -f "$MOUNTPOINT/boot/loader/entries/arch.conf" ]] || die "systemd-boot entry is missing."
+    [[ -f "$MOUNTPOINT/boot/EFI/BOOT/BOOTX64.EFI" ]] || die "UEFI fallback bootloader missing."
+  else
+    [[ -s "$MOUNTPOINT/boot/grub/grub.cfg" ]] || die "GRUB configuration missing."
+  fi
   [[ -f "$MOUNTPOINT/etc/fstab" ]] || die "fstab is missing."
   [[ -f "$MOUNTPOINT/etc/hostname" ]] || die "hostname configuration is missing."
   [[ -f "$MOUNTPOINT/etc/rick-linux-release" ]] || die "Ricks Linux release marker is missing."
@@ -445,7 +470,7 @@ main(){
   banner
   require_root
   require_archiso
-  require_uefi
+  detect_boot_mode
   require_tools
   require_internet
   check_clock
@@ -454,6 +479,7 @@ main(){
   prompt_settings
   detect_microcode
   list_and_select_disk
+  confirm_erase
   partition_and_format
   mount_target
   install_base

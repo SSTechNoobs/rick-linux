@@ -6,9 +6,12 @@ USERNAME="${2:?Missing username}"
 SOURCE_DIR="${3:?Missing Rick Linux source directory}"
 DESKTOP_NAME="${4:-Hyprland}"
 
-DEFAULT_THEME="dallas"
+DEFAULT_THEME="hyprland"
 
 case "${DESKTOP_NAME,,}" in
+    "rick hyprland"|"ricks hyprland")
+        DEFAULT_THEME="dallas"
+        ;;
     "jojo hyprland")
         DEFAULT_THEME="miami"
         ;;
