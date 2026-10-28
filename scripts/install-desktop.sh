@@ -189,23 +189,6 @@ arch-chroot "$MOUNTPOINT" pacman \
     "${GRAPHICS_PACKAGES[@]}"
 
 # ------------------------------------------------------------
-# Ghostty compatibility for Intel 3rd Generation graphics
-# ------------------------------------------------------------
-
-if grep -qiF '8086:0152' <<< "$GPU_INFO"; then
-    info "Older Intel graphics detected: enabling Ghostty software rendering."
-
-    install -d -m 0755 "$MOUNTPOINT/usr/local/bin"
-
-    cat > "$MOUNTPOINT/usr/local/bin/ghostty" <<'EOF_GHOSTTY'
-#!/bin/sh
-exec env LIBGL_ALWAYS_SOFTWARE=1 /usr/bin/ghostty "$@"
-EOF_GHOSTTY
-
-    chmod 0755 "$MOUNTPOINT/usr/local/bin/ghostty"
-fi
-
-# ------------------------------------------------------------
 # System services
 # ------------------------------------------------------------
 
