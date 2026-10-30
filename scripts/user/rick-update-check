@@ -3,93 +3,51 @@ set -u
 
 LOCK="/tmp/ricks-hyprland-auto-update.lock"
 STATE_DIR="$HOME/.local/state/ricks-hyprland"
-LOG="$STATE_DIR/auto-update.log"
-PACMAN_LOG="/var/log/pacman.log"
+LOG="$STATE_DIR/update-check.log"
 
 mkdir -p "$STATE_DIR"
 
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
-repo_updates="$(checkupdates --nocolor 2>/dev/null || true)"
-aur_updates="$(yay -Qua --nocolor 2>/dev/null || true)"
+# Check official Arch updates without installing anything.
+updates="$(checkupdates --nocolor 2>>"$LOG")"
+status=$?
 
-repo_count="$(printf '%s\n' "$repo_updates" | sed '/^$/d' | wc -l)"
-aur_count="$(printf '%s\n' "$aur_updates" | sed '/^$/d' | wc -l)"
-total=$((repo_count + aur_count))
+case "$status" in
+    0)
+        count="$(printf '%s\n' "$updates" | grep -c . || true)"
+        ;;
+    2)
+        printf '%s: No updates available.\n' "$(date)" >> "$LOG"
+        exit 0
+        ;;
+    *)
+        printf '%s: Update check failed (exit %s).\n' \
+            "$(date)" "$status" >> "$LOG"
+        notify-send \
+            -a "Ricks Hyprland" \
+            -u normal \
+            -i dialog-warning \
+            "Update Check Failed" \
+            "Could not check Arch updates. See $LOG"
+        exit 1
+        ;;
+esac
 
-if (( total == 0 )); then
+if (( count == 0 )); then
     exit 0
 fi
 
-before_lines=0
-if [[ -f "$PACMAN_LOG" ]]; then
-    before_lines="$(wc -l < "$PACMAN_LOG")"
-fi
+printf '%s: %s updates available. Nothing installed.\n' \
+    "$(date)" "$count" >> "$LOG"
 
-{
-    echo
-    echo "========================================"
-    echo "Ricks Linux automatic update"
-    date
-    echo "Official updates: $repo_count"
-    echo "AUR updates:      $aur_count"
-    echo "========================================"
-} >> "$LOG"
+body="$(printf 'Official Arch updates: %s\n\nClick the taskbar update icon to install manually.\nAUR updates are checked by the taskbar.' "$count")"
 
-if yay -Syu \
-    --noconfirm \
-    --answerclean None \
-    --answerdiff None \
-    >> "$LOG" 2>&1
-then
-    new_lines="$(
-        tail -n "+$((before_lines + 1))" "$PACMAN_LOG" 2>/dev/null || true
-    )"
-
-    changed="$(
-        printf '%s\n' "$new_lines" |
-        grep -E '\[ALPM\] (upgraded|installed|downgraded) ' |
-        sed -E 's/^.*\[ALPM\] (upgraded|installed|downgraded) ([^ ]+) \((.*)\)$/\2  \3/' |
-        head -12
-    )"
-
-    changed_count="$(
-        printf '%s\n' "$new_lines" |
-        grep -Ec '\[ALPM\] (upgraded|installed|downgraded) ' || true
-    )"
-
-    if [[ -z "$changed" ]]; then
-        changed="Updates completed successfully."
-    fi
-
-    body="Installed $changed_count package update(s).
-
-$changed"
-
-    if (( changed_count > 12 )); then
-        body="$body
-
-...and $((changed_count - 12)) more"
-    fi
-
-    notify-send \
-        -a "Ricks Linux" \
-        -u normal \
-        -t 300000 \
-        -i system-software-update \
-        "Ricks Linux Updated" \
-        "$body"
-else
-    notify-send \
-        -a "Ricks Linux" \
-        -u critical \
-        -i dialog-error \
-        "Ricks Linux Update Failed" \
-        "Automatic updates did not finish successfully.
-
-Log:
-$LOG"
-
-    exit 1
-fi
+notify-send \
+    -a "Ricks Hyprland" \
+    -u normal \
+    -t 300000 \
+    -i system-software-update \
+    "Ricks Hyprland Updates Available" \
+    "$body"

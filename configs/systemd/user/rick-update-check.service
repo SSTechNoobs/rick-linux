@@ -1,5 +1,5 @@
 [Unit]
-Description=Hyprland daily automatic update
+Description=Ricks Hyprland update check (notification only)
 
 [Service]
 Type=oneshot
