@@ -1450,7 +1450,7 @@ ShellRoot {
 
             Timer {
                 id: updateCheckTimer
-                interval: 60000
+                interval: 3600000
                 running: true
                 repeat: true
 
