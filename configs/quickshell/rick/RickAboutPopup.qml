@@ -325,7 +325,7 @@ PopupWindow {
 
                     Repeater {
                         model: [
-                            { label: "OS:", value: aboutPopup.info.OS || "Loading..." },
+                            { label: "OS:", value: "Linux Hyprland" },
                             { label: "Kernel:", value: aboutPopup.info.KERNEL || "Loading..." },
                             { label: "Window Manager:", value: aboutPopup.info.WM || "Loading..." },
                             { label: "Terminal:", value: aboutPopup.info.TERMINAL || "Loading..." },
