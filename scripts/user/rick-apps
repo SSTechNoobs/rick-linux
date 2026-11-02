@@ -152,7 +152,6 @@ def applications():
                 "PCMan File Manager",
                 "Rick Theme Manager",
                 "Steam",
-                "DesignCraft",
                 "GridCraft",
                 "WordCraft",
             }
