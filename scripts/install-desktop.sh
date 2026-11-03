@@ -463,7 +463,7 @@ for helper in "$SOURCE_DIR"/scripts/user/rick-*; do
         "$USER_HOME/.local/bin/$(basename "$helper")"
 done
 
-# Daily Ricks Linux update checks (notification only).
+# Daily automatic Ricks Linux updates.
 install -m 0644 \
     "$SOURCE_DIR/configs/systemd/user/rick-update-check.service" \
     "$USER_HOME/.config/systemd/user/rick-update-check.service"
@@ -653,7 +653,7 @@ TEMP_SUDO=""
 # Automatic daily updates
 # ------------------------------------------------------------
 
-info "Configuring automatic weekly updates..."
+info "Configuring automatic daily updates..."
 
 AUTO_UPDATE_SUDO="$MOUNTPOINT/etc/sudoers.d/90-ricks-auto-update"
 

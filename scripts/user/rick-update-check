@@ -10,44 +10,36 @@ mkdir -p "$STATE_DIR"
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
-# Check official Arch updates without installing anything.
-updates="$(checkupdates --nocolor 2>>"$LOG")"
-status=$?
+printf '\n=== %s Automatic update started ===\n' \
+    "$(date --iso-8601=seconds)" >> "$LOG"
 
-case "$status" in
-    0)
-        count="$(printf '%s\n' "$updates" | grep -c . || true)"
-        ;;
-    2)
-        printf '%s: No updates available.\n' "$(date)" >> "$LOG"
-        exit 0
-        ;;
-    *)
-        printf '%s: Update check failed (exit %s).\n' \
-            "$(date)" "$status" >> "$LOG"
-        notify-send \
-            -a "Ricks Hyprland" \
-            -u normal \
-            -i dialog-warning \
-            "Update Check Failed" \
-            "Could not check Arch updates. See $LOG"
-        exit 1
-        ;;
-esac
+if /usr/bin/yay -Syu \
+    --noconfirm \
+    --answerclean None \
+    --answerdiff None \
+    >> "$LOG" 2>&1
+then
+    printf '=== %s Automatic update completed successfully ===\n' \
+        "$(date --iso-8601=seconds)" >> "$LOG"
 
-if (( count == 0 )); then
-    exit 0
+    notify-send \
+        -a "Ricks Hyprland" \
+        -u normal \
+        -i system-software-update \
+        "Automatic Updates Complete" \
+        "Arch and AUR updates installed successfully."
+else
+    rc=$?
+
+    printf '=== %s Automatic update FAILED with exit code %s ===\n' \
+        "$(date --iso-8601=seconds)" "$rc" >> "$LOG"
+
+    notify-send \
+        -a "Ricks Hyprland" \
+        -u critical \
+        -i dialog-warning \
+        "Automatic Update Failed" \
+        "See $LOG for details."
+
+    exit "$rc"
 fi
-
-printf '%s: %s updates available. Nothing installed.\n' \
-    "$(date)" "$count" >> "$LOG"
-
-body="$(printf 'Official Arch updates: %s\n\nClick the taskbar update icon to install manually.\nAUR updates are checked by the taskbar.' "$count")"
-
-notify-send \
-    -a "Ricks Hyprland" \
-    -u normal \
-    -t 300000 \
-    -i system-software-update \
-    "Ricks Hyprland Updates Available" \
-    "$body"

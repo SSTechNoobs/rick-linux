@@ -1,5 +1,5 @@
 [Unit]
-Description=Ricks Hyprland update check (notification only)
+Description=Ricks Hyprland automatic Arch and AUR updates
 
 [Service]
 Type=oneshot

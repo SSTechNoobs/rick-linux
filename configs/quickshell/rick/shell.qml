@@ -1438,25 +1438,13 @@ ShellRoot {
                     "{ checkupdates 2>/dev/null || true; yay -Qua 2>/dev/null || true; } | sed '/^$/d' | wc -l"
                 ]
 
-                running: true
+                running: false
 
                 stdout: StdioCollector {
                     onStreamFinished: {
                         var n = parseInt(this.text.trim())
                         updateButton.updateCount = isNaN(n) ? 0 : n
                     }
-                }
-            }
-
-            Timer {
-                id: updateCheckTimer
-                interval: 3600000
-                running: true
-                repeat: true
-
-                onTriggered: {
-                    if (!updateCountProc.running)
-                        updateCountProc.running = true
                 }
             }
 

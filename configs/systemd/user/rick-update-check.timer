@@ -1,8 +1,8 @@
 [Unit]
-Description=Ricks Hyprland daily update check (notification only)
+Description=Ricks Hyprland automatic daily updates at midnight
 
 [Timer]
-OnCalendar=*-*-* 07:30:00
+OnCalendar=*-*-* 00:00:00
 Persistent=true
 
 [Install]
