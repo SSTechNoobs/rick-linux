@@ -3,3 +3,6 @@ config-file = /home/rick/.config/aether/theme/ghostty.conf
 
 # Hyprland glass terminal
 background-opacity = 0.72
+
+# Fix Ghostty right-click Clear
+shell-integration = none
