@@ -3,6 +3,12 @@
 RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 FLAG="$RUNTIME/rick-displays-idle"
 
+# Do not turn displays off while media is actively playing.
+if /usr/bin/playerctl status -a 2>/dev/null | grep -qx "Playing"; then
+    echo "$(date '+%F %T') SKIP-OFF media-playing" >> /tmp/rick-display-power.log
+    exit 0
+fi
+
 echo "$(date '+%F %T') OFF" >> /tmp/rick-display-power.log
 
 touch "$FLAG"
