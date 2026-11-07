@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+BATTERY=""
+
+for dev in /sys/class/power_supply/*; do
+    [[ -d "$dev" ]] || continue
+
+    TYPE="$(cat "$dev/type" 2>/dev/null || true)"
+    SCOPE="$(cat "$dev/scope" 2>/dev/null || true)"
+    CAPACITY="$(cat "$dev/capacity" 2>/dev/null || true)"
+
+    [[ "$TYPE" == "Battery" ]] || continue
+
+    # Ignore keyboards, mice, headsets, controllers, etc.
+    [[ "$SCOPE" == "Device" ]] && continue
+
+    # A laptop system battery should report a numeric percentage.
+    [[ "$CAPACITY" =~ ^[0-9]+$ ]] || continue
+
+    BATTERY="$dev"
+    break
+done
+
+if [[ -z "$BATTERY" ]]; then
+    echo "none"
+    exit 0
+fi
+
+CAPACITY="$(cat "$BATTERY/capacity")"
+STATUS="$(cat "$BATTERY/status" 2>/dev/null || echo "Unknown")"
+
+printf 'battery|%s|%s\n' "$CAPACITY" "$STATUS"

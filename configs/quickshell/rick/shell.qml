@@ -96,6 +96,9 @@ ShellRoot {
 
     property string btStatus: "..."
     property string volumeStatus: "..."
+    property bool batteryAvailable: false
+    property int batteryPercent: 0
+    property string batteryState: ""
     property string weatherStatus: "Weather..."
     property string forecastStatus: "Loading forecast..."
     property var weatherData: ({})
@@ -171,6 +174,53 @@ ShellRoot {
         }
     }
 
+    Process {
+        id: batteryProc
+        command: ["/home/rick/.local/bin/rick-battery-status"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+
+                if (value === "none" || value.length === 0) {
+                    root.batteryAvailable = false
+                    root.batteryPercent = 0
+                    root.batteryState = ""
+                    return
+                }
+
+                var parts = value.split("|")
+
+                if (parts.length >= 3 && parts[0] === "battery") {
+                    var percent = parseInt(parts[1])
+
+                    if (!isNaN(percent)) {
+                        root.batteryAvailable = true
+                        root.batteryPercent = Math.max(
+                            0,
+                            Math.min(100, percent)
+                        )
+                        root.batteryState = parts[2]
+                        return
+                    }
+                }
+
+                root.batteryAvailable = false
+            }
+        }
+    }
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+
+        onTriggered: {
+            if (!batteryProc.running)
+                batteryProc.running = true
+        }
+    }
 
 
     Process {
@@ -1385,6 +1435,72 @@ ShellRoot {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: Quickshell.execDetached(["/home/rick/.local/bin/rick-bluetooth"])
+                }
+            }
+
+            Rectangle {
+                visible: root.batteryAvailable
+                width: visible ? 72 : 0
+                height: 32
+                radius: 8
+                color: "transparent"
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    Item {
+                        width: 25
+                        height: 14
+
+                        Rectangle {
+                            id: batteryBody
+
+                            width: 20
+                            height: 12
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            radius: 2
+                            color: "transparent"
+                            border.width: 1
+                            border.color: root.themeForeground
+
+                            Rectangle {
+                                x: 2
+                                y: 2
+
+                                width: Math.round(
+                                    (parent.width - 4)
+                                    * root.batteryPercent / 100
+                                )
+
+                                height: parent.height - 4
+                                radius: 1
+                                color: root.themeForeground
+                            }
+                        }
+
+                        Rectangle {
+                            width: 3
+                            height: 6
+
+                            anchors.left: batteryBody.right
+                            anchors.leftMargin: 1
+                            anchors.verticalCenter: batteryBody.verticalCenter
+
+                            radius: 1
+                            color: root.themeForeground
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        text: root.batteryPercent + "%"
+                        color: root.themeForeground
+                        font.pixelSize: 13
+                    }
                 }
             }
 
