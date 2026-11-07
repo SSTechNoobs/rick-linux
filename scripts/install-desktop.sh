@@ -476,6 +476,19 @@ ln -sfn \
     ../rick-update-check.timer \
     "$USER_HOME/.config/systemd/user/timers.target.wants/rick-update-check.timer"
 
+# Daily rotating theme wallpaper.
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-daily-wallpaper.service" \
+    "$USER_HOME/.config/systemd/user/rick-daily-wallpaper.service"
+
+install -m 0644 \
+    "$SOURCE_DIR/configs/systemd/user/rick-daily-wallpaper.timer" \
+    "$USER_HOME/.config/systemd/user/rick-daily-wallpaper.timer"
+
+ln -sfn \
+    ../rick-daily-wallpaper.timer \
+    "$USER_HOME/.config/systemd/user/timers.target.wants/rick-daily-wallpaper.timer"
+
 # Start Steam silently every Sunday so Steam/game updates can download.
 install -m 0644 \
     "$SOURCE_DIR/configs/systemd/user/rick-steam-weekly.service" \

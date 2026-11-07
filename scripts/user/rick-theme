@@ -146,6 +146,11 @@ apply_theme() {
 
     printf '%s\n' "$id" > "$ACTIVE"
 
+    # Themes with daily wallpapers immediately select today's image.
+    if [[ -x "$HOME/.local/bin/rick-daily-wallpaper" ]]; then
+        "$HOME/.local/bin/rick-daily-wallpaper" >/dev/null 2>&1 || true
+    fi
+
     # Keep login transition and fallback wallpaper matched to the theme.
     mkdir -p \
         "$HOME/Pictures/RicksLinuxSplash" \

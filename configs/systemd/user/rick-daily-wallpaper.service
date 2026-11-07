@@ -1,0 +1,6 @@
+[Unit]
+Description=Ricks Hyprland Daily Wallpaper Rotation
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/rick-daily-wallpaper

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+THEMES="$HOME/.config/ricks-hyprland/themes"
+ACTIVE="$HOME/.config/ricks-hyprland/active-theme"
+LIVE="$HOME/.config/aether/theme/backgrounds/wallpaper.png"
+STATE="$HOME/.local/state/ricks-hyprland"
+
+mkdir -p "$STATE"
+
+[[ -f "$ACTIVE" ]] || exit 0
+
+THEME="$(cat "$ACTIVE")"
+DAILY="$THEMES/$THEME/daily-wallpapers"
+
+# Themes without daily wallpapers keep their normal wallpaper.
+[[ -d "$DAILY" ]] || exit 0
+
+mapfile -t WALLPAPERS < <(
+    find "$DAILY" -maxdepth 1 -type f -name '*.png' | sort -V
+)
+
+COUNT="${#WALLPAPERS[@]}"
+
+[[ "$COUNT" -gt 0 ]] || exit 0
+
+# Rotate by calendar day so the wallpaper changes every day.
+DAY="$(date +%j)"
+INDEX=$(( (10#$DAY - 1) % COUNT ))
+
+SELECTED="${WALLPAPERS[$INDEX]}"
+
+mkdir -p "$(dirname "$LIVE")"
+cp -f "$SELECTED" "$LIVE"
+
+echo "$(date '+%F %T') theme=$THEME wallpaper=$(basename "$SELECTED")" \
+    >> "$STATE/daily-wallpaper.log"
+
+systemctl --user restart rick-wallpaper.service \
+    >/dev/null 2>&1 || true
