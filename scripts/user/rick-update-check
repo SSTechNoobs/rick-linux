@@ -13,16 +13,6 @@ flock -n 9 || exit 0
 printf '\n=== %s Automatic update started ===\n' \
     "$(date --iso-8601=seconds)" >> "$LOG"
 
-# Update Craft Anything AppImage independently.
-if "$HOME/.local/bin/rick-craft-update" >> "$LOG" 2>&1; then
-    printf 'Craft Anything update check completed.\n' >> "$LOG"
-else
-    printf 'WARNING: Craft Anything update failed.\n' >> "$LOG"
-    notify-send -a "Ricks Hyprland" -u critical \
-        "Craft Anything Update Failed" \
-        "Your existing AppImage was preserved."
-fi
-
 if /usr/bin/yay -Syu \
     --noconfirm \
     --answerclean None \
@@ -35,6 +25,7 @@ then
     notify-send \
         -a "Ricks Hyprland" \
         -u normal \
+        -t 300000 \
         -i system-software-update \
         "Automatic Updates Complete" \
         "Arch and AUR updates installed successfully."

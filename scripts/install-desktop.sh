@@ -420,23 +420,6 @@ install -m 0644 \
     "$SOURCE_DIR/configs/icons/chatgpt.png" \
     "$USER_HOME/.local/share/icons/chatgpt.png"
 
-# Craft Anything launcher and icon.
-install -m 0644 \
-    "$SOURCE_DIR/configs/applications/ai.storyteller.craft-anything.desktop" \
-    "$USER_HOME/.local/share/applications/ai.storyteller.craft-anything.desktop"
-
-install -d \
-    "$USER_HOME/.local/share/icons/hicolor/scalable/apps"
-
-install -m 0644 \
-    "$SOURCE_DIR/configs/icons/ai.storyteller.craft-anything.svg" \
-    "$USER_HOME/.local/share/icons/hicolor/scalable/apps/ai.storyteller.craft-anything.svg"
-
-sed -i \
-    "s#/home/rick#/home/$USERNAME#g" \
-    "$USER_HOME/.local/share/applications/ai.storyteller.craft-anything.desktop"
-
-
 sed -i \
     "s#/home/rick#/home/$USERNAME#g" \
     "$USER_HOME/.local/share/applications/rick-chatgpt.desktop" \
@@ -630,22 +613,6 @@ arch-chroot "$MOUNTPOINT" chown \
     -R "$USERNAME:$USERNAME" \
     "/home/$USERNAME"
 
-# ------------------------------------------------------------
-# Install Craft Anything AppImage for the new user
-# ------------------------------------------------------------
-
-info "Installing Craft Anything AppImage..."
-
-if arch-chroot "$MOUNTPOINT" \
-    runuser -u "$USERNAME" -- \
-    "/home/$USERNAME/.local/bin/rick-craft-update"; then
-    info "Craft Anything installed successfully."
-else
-    info "WARNING: Craft Anything download failed."
-    info "The midnight updater can retry after installation."
-fi
-
-# ------------------------------------------------------------
 # ------------------------------------------------------------
 # AUR applications
 # ------------------------------------------------------------
