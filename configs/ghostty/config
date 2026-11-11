@@ -6,3 +6,6 @@ background-opacity = 0.72
 
 # Fix Ghostty right-click Clear
 shell-integration = none
+
+# Close Ghostty without confirmation
+confirm-close-surface = false
