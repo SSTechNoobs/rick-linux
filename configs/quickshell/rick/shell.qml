@@ -95,6 +95,9 @@ ShellRoot {
     }
 
     property string btStatus: "..."
+    property bool bluetoothBatteryAvailable: false
+    property int bluetoothBatteryPercent: 0
+    property string bluetoothBatteryName: ""
     property string volumeStatus: "..."
     property bool batteryAvailable: false
     property int batteryPercent: 0
@@ -161,6 +164,44 @@ ShellRoot {
 
         stdout: StdioCollector {
             onStreamFinished: root.btStatus = this.text.trim()
+        }
+    }
+
+    Process {
+        id: btBatteryProc
+        command: ["/home/rick/.local/bin/rick-bluetooth-battery-status"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var value = this.text.trim()
+
+                if (value === "none" || value.length === 0) {
+                    root.bluetoothBatteryAvailable = false
+                    root.bluetoothBatteryPercent = 0
+                    root.bluetoothBatteryName = ""
+                    return
+                }
+
+                var parts = value.split("|")
+
+                if (parts.length >= 3 && parts[0] === "battery") {
+                    root.bluetoothBatteryName = parts[1]
+                    root.bluetoothBatteryPercent = parseInt(parts[2])
+                    root.bluetoothBatteryAvailable = true
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+
+        onTriggered: {
+            if (!btBatteryProc.running)
+                btBatteryProc.running = true
         }
     }
 
@@ -1419,17 +1460,30 @@ ShellRoot {
             
 
             Rectangle {
-                width: 42
+                width: root.bluetoothBatteryAvailable ? 76 : 42
                 height: 32
                 radius: 8
                 color: "transparent"
 
-                Image {
+                Row {
                     anchors.centerIn: parent
-                    width: 20
-                    height: 20
-                    source: "file:///home/rick/.config/quickshell/rick/icons/bluetooth.svg"
-                    fillMode: Image.PreserveAspectFit
+                    spacing: 5
+
+                    Image {
+                        width: 20
+                        height: 20
+                        source: "file:///home/rick/.config/quickshell/rick/icons/bluetooth.svg"
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    Text {
+                        visible: root.bluetoothBatteryAvailable
+                        text: root.bluetoothBatteryPercent + "%"
+                        color: root.themeForeground
+                        font.pixelSize: 13
+                        font.bold: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {

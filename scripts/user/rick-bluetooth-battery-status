@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+while IFS= read -r line; do
+    line="${line#Device }"
+
+    mac="${line%% *}"
+    name="${line#"$mac "}"
+
+    info="$(bluetoothctl info "$mac" 2>/dev/null)"
+
+    percent="$(
+        printf '%s\n' "$info" |
+        sed -nE 's/^[[:space:]]*Battery Percentage:[[:space:]]*0x[0-9A-Fa-f]+ \(([0-9]+)\).*$/\1/p' |
+        head -n1
+    )"
+
+    if [[ "$percent" =~ ^[0-9]+$ ]]; then
+        printf 'battery|%s|%s\n' "$name" "$percent"
+        exit 0
+    fi
+done < <(bluetoothctl devices Connected 2>/dev/null)
+
+echo "none"
