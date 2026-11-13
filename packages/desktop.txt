@@ -44,3 +44,4 @@ mako
 pacman-contrib
 libnotify
 plymouth
+hyprpm

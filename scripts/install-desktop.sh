@@ -68,6 +68,59 @@ arch-chroot "$MOUNTPOINT" pacman \
     "${DESKTOP_PACKAGES[@]}"
 
 # ------------------------------------------------------------
+# Hyprland hyprbars plugin
+# ------------------------------------------------------------
+
+info "Installing Hyprland hyprbars plugin..."
+
+HYPRPM_SUDO="$MOUNTPOINT/etc/sudoers.d/90-ricks-hyprpm-install"
+
+printf '%s ALL=(root) NOPASSWD: ALL\n' "$USERNAME" \
+    > "$HYPRPM_SUDO"
+
+chmod 0440 "$HYPRPM_SUDO"
+
+arch-chroot "$MOUNTPOINT" \
+    visudo -cf /etc/sudoers.d/90-ricks-hyprpm-install >/dev/null
+
+arch-chroot "$MOUNTPOINT" \
+    install -d \
+    -o "$USERNAME" \
+    -g "$USERNAME" \
+    -m 0700 \
+    /tmp/rick-hyprpm-runtime
+
+HYPRPM_COMMAND=$(cat <<'EOF_HYPRPM'
+set -e
+
+export XDG_RUNTIME_DIR=/tmp/rick-hyprpm-runtime
+
+hyprpm update
+
+printf 'y\n' | \
+    hyprpm add https://github.com/hyprwm/hyprland-plugins
+
+hyprpm enable hyprbars
+EOF_HYPRPM
+)
+
+arch-chroot "$MOUNTPOINT" \
+    runuser -u "$USERNAME" -- \
+    env \
+        HOME="/home/$USERNAME" \
+        USER="$USERNAME" \
+        LOGNAME="$USERNAME" \
+        XDG_RUNTIME_DIR=/tmp/rick-hyprpm-runtime \
+        bash --noprofile --norc -c "$HYPRPM_COMMAND"
+
+rm -f "$HYPRPM_SUDO"
+
+arch-chroot "$MOUNTPOINT" \
+    rm -rf /tmp/rick-hyprpm-runtime
+
+ok "Hyprland hyprbars plugin installed and enabled."
+
+# ------------------------------------------------------------
 # Ricks Linux Plymouth boot/shutdown theme
 # ------------------------------------------------------------
 
