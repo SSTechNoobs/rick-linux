@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Dallas Cowboys Wallpapers
+Comment=Choose a Dallas Cowboys wallpaper
+Exec=/home/rick/.local/bin/rick-cowboys-wallpaper-choose
+Icon=/home/rick/.config/quickshell/rick/icons/cowboys-helmet.png
+Terminal=false
+Categories=Settings;DesktopSettings;

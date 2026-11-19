@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG="rick"
+
+if pgrep -af "^qs -c ${CONFIG}$" >/dev/null; then
+    echo "$CONFIG is already running."
+    exit 0
+fi
+
+exec qs -c "$CONFIG"

@@ -3,7 +3,7 @@ Description=Hyprland Wallpaper
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/swaybg -i %h/.config/aether/theme/backgrounds/wallpaper.png -m fill
+ExecStart=%h/.local/bin/rick-wallpaper-edition
 Restart=on-failure
 
 [Install]

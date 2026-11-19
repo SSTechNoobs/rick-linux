@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ORIGINAL="$HOME/.config/aether/theme/backgrounds/wallpaper.png"
+FALLBACK="$HOME/Pictures/RicksLinuxWallpaper/wallpaper.png"
+
+
+if [[ -f "$ORIGINAL" ]]; then
+    WALLPAPER="$ORIGINAL"
+elif [[ -f "$FALLBACK" ]]; then
+    WALLPAPER="$FALLBACK"
+else
+    echo "No wallpaper available." >&2
+    exit 1
+fi
+
+exec /usr/bin/swaybg -i "$WALLPAPER" -m fill

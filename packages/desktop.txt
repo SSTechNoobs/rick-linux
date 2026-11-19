@@ -44,4 +44,7 @@ mako
 pacman-contrib
 libnotify
 plymouth
+zenity
+desktop-file-utils
+xdg-utils
 hyprpm

@@ -7,7 +7,7 @@ restart_bar() {
     pkill -x qs 2>/dev/null || true
     sleep 1
 
-    nohup qs -c rick \
+    nohup "$HOME/.local/bin/rick-bar-start" \
         >/tmp/rick-quickshell.log 2>&1 &
 }
 

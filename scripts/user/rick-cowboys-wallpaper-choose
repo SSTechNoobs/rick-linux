@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+THEME_FILE="$HOME/.config/ricks-hyprland/active-theme"
+WALLPAPER_DIR="$HOME/.config/ricks-hyprland/themes/dallas/daily-wallpapers"
+LIVE="$HOME/.config/aether/theme/backgrounds/wallpaper.png"
+
+if [[ "$(cat "$THEME_FILE" 2>/dev/null)" != "dallas" ]]; then
+    zenity --warning \
+        --title="Dallas Cowboys Wallpapers" \
+        --text="Switch to the Dallas Cowboys theme first."
+    exit 0
+fi
+
+mapfile -t WALLPAPERS < <(
+    find "$WALLPAPER_DIR" -maxdepth 1 -type f \
+        \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) \
+        -printf '%f\n' | sort
+)
+
+[[ ${#WALLPAPERS[@]} -gt 0 ]] || {
+    zenity --error \
+        --title="Dallas Cowboys Wallpapers" \
+        --text="No Cowboys wallpapers were found."
+    exit 0
+}
+
+SELECTED="$(
+    printf '%s\n' "${WALLPAPERS[@]}" |
+    zenity --list \
+        --title="Dallas Cowboys Wallpaper Chooser" \
+        --text="Choose your wallpaper:" \
+        --column="Wallpaper" \
+        --width=600 \
+        --height=420
+)" || exit 0
+
+[[ -n "$SELECTED" ]] || exit 0
+
+mkdir -p "$(dirname "$LIVE")"
+
+cp -f "$WALLPAPER_DIR/$SELECTED" "$LIVE"
+
+systemctl --user restart rick-wallpaper.service
+
+notify-send \
+    "Dallas Cowboys" \
+    "Wallpaper changed to $SELECTED" 2>/dev/null || true

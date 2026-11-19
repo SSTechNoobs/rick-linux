@@ -234,7 +234,7 @@ fi
 cat > "$MOUNTPOINT/etc/rick-linux-release" <<'RICK_RELEASE'
 NAME="Ricks Linux"
 ID=rick-linux
-VERSION="1.1.10"
+VERSION="1.1.13"
 BASE="Arch Linux"
 RICK_RELEASE
 
@@ -406,6 +406,15 @@ install -m 0644 \
 install -m 0644 \
     "$SOURCE_DIR/configs/libfm/libfm.conf" \
     "$USER_HOME/.config/libfm/libfm.conf"
+
+# Dallas-only Cowboys wallpaper chooser.
+if [[ "$DEFAULT_THEME" == "dallas" ]]; then
+    install -m 0644 \
+        "$SOURCE_DIR/configs/applications/rick-cowboys-wallpaper.desktop" \
+        "$USER_HOME/.local/share/applications/rick-cowboys-wallpaper.desktop"
+    sed -i "s#/home/rick#/home/$USERNAME#g" \
+        "$USER_HOME/.local/share/applications/rick-cowboys-wallpaper.desktop"
+fi
 
 # ChatGPT launcher and icon.
 install -m 0644 \
